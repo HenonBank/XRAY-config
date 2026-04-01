@@ -1,0 +1,2 @@
+# SNI whitelist full
+# Will be updated automatically
