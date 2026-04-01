@@ -1,0 +1,2 @@
+# VLESS configs for mobile
+# Will be updated automatically
