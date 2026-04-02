@@ -2,8 +2,10 @@ name: Автоматическое обновление конфигов
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Каждые 6 часов (чтобы не превысить лимиты)
+    - cron: '0 * * * *'  # Каждый час
   workflow_dispatch:  # Ручной запуск
+  push:
+    branches: [ main ]
 
 jobs:
   update:
@@ -11,12 +13,12 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: '3.10'
     
@@ -25,18 +27,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install aiohttp aiofiles requests
     
-    - name: Create necessary files
+    - name: Create sources.txt
       run: |
-        # Создаем sources.txt если его нет
-        if [ ! -f sources.txt ]; then
-          echo "https://raw.githubusercontent.com/ProxyRUS/VLESS-Configs/main/url.txt" > sources.txt
-          echo "https://raw.githubusercontent.com/AzadNetCH/Configs/main/VLESS" >> sources.txt
-        fi
-        
-        # Создаем пустой whitelist.txt если его нет
-        if [ ! -f whitelist.txt ]; then
-          touch whitelist.txt
-        fi
+        echo "https://raw.githubusercontent.com/arkanar/Configs/main/configs.txt" > sources.txt
+        echo "https://raw.githubusercontent.com/MrOtherGit/Free-Configs/main/all_base64.txt" >> sources.txt
     
     - name: Run parser
       env:
@@ -44,21 +38,11 @@ jobs:
       run: |
         python beta.py --once
     
-    - name: Check if files were created
-      run: |
-        echo "=== Созданные файлы ==="
-        ls -la *.txt 2>/dev/null || echo "Нет txt файлов"
-        echo "======================"
-    
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add *.txt *.md *.json 2>/dev/null || true
         git add .github/workflows/*.yml 2>/dev/null || true
-        if ! git diff --cached --quiet; then
-          git commit -m "🤖 Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
-        else
-          echo "✅ Нет изменений для коммита"
-        fi
+        git diff --quiet && git diff --staged --quiet || git commit -m "🔄 Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+        git push || echo "Push failed or no changes"
