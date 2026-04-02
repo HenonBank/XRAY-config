@@ -2,7 +2,7 @@ name: Автоматическое обновление конфигов
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Каждый час
+    - cron: '0 */6 * * *'  # Каждые 6 часов (чтобы не превысить лимиты)
   workflow_dispatch:  # Ручной запуск
 
 jobs:
@@ -11,12 +11,12 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.10'
     
@@ -25,16 +25,40 @@ jobs:
         python -m pip install --upgrade pip
         pip install aiohttp aiofiles requests
     
+    - name: Create necessary files
+      run: |
+        # Создаем sources.txt если его нет
+        if [ ! -f sources.txt ]; then
+          echo "https://raw.githubusercontent.com/ProxyRUS/VLESS-Configs/main/url.txt" > sources.txt
+          echo "https://raw.githubusercontent.com/AzadNetCH/Configs/main/VLESS" >> sources.txt
+        fi
+        
+        # Создаем пустой whitelist.txt если его нет
+        if [ ! -f whitelist.txt ]; then
+          touch whitelist.txt
+        fi
+    
     - name: Run parser
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python beta.py --once
     
+    - name: Check if files were created
+      run: |
+        echo "=== Созданные файлы ==="
+        ls -la *.txt 2>/dev/null || echo "Нет txt файлов"
+        echo "======================"
+    
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add *.txt *.md *.json
-        git diff --quiet && git diff --staged --quiet || git commit -m "Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')"
-        git push
+        git add *.txt *.md *.json 2>/dev/null || true
+        git add .github/workflows/*.yml 2>/dev/null || true
+        if ! git diff --cached --quiet; then
+          git commit -m "🤖 Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+        else
+          echo "✅ Нет изменений для коммита"
+        fi
