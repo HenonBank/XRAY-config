@@ -2,11 +2,10 @@ import subprocess
 import os
 from docx import Document
 from docx.shared import Inches, Pt, Cm
-from docx.enum.text import WD_BREAK, WD_UNDERLINE
-from docx.enum.style import WD_STYLE_TYPE
-from docx.oxml import parse_xml
-from docx.oxml.ns import nsdecls
-from docx.oxml.shared import OxmlElement, qn
+from docx.enum.text import WD_BREAK
+from docx.enum.section import WD_SECTION_START
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 
 def set_column_break(paragraph):
     """Вставляет разрыв колонки."""
@@ -15,22 +14,23 @@ def set_column_break(paragraph):
     br.set(qn('w:type'), 'column')
     run._element.append(br)
 
-def apply_bullet_style(paragraph):
-    """Применяет стиль для буквицы (имитация)."""
-    # Увеличиваем первую букву через run
+def apply_dropcap(paragraph):
+    """Имитация буквицы через увеличение первой буквы."""
     if paragraph.text:
-        first_char = paragraph.text[0]
-        rest_text = paragraph.text[1:]
+        text = paragraph.text
         paragraph.clear()
-        run_first = paragraph.add_run(first_char)
-        run_first.font.size = Pt(36)
-        run_first.font.bold = True
-        run_rest = paragraph.add_run(rest_text)
+        if text:
+            first_char = text[0]
+            rest_text = text[1:]
+            run_first = paragraph.add_run(first_char)
+            run_first.font.size = Pt(36)
+            run_first.font.bold = True
+            run_rest = paragraph.add_run(rest_text)
 
 # Создаем документ Word
 doc = Document()
 
-# Настройка страницы: отступы и колонки (зададим позже для секции с колонками)
+# Настройка страницы
 section = doc.sections[0]
 section.page_width = Cm(21.0)
 section.page_height = Cm(29.7)
@@ -41,17 +41,17 @@ section.bottom_margin = Cm(2.0)
 
 # Заголовок
 title = doc.add_heading('Практическая работа № 6 «Оформление документа. Колонки»', 1)
-title.alignment = 1  # По центру
+title.alignment = 1
 
 # Цель
 p = doc.add_paragraph()
 p.add_run('Цель работы:').bold = True
 p.add_run(' научиться создавать и редактировать колонки в программе MS Word.')
 
-# Теоретический материал (заголовок)
+# Теоретический материал
 doc.add_heading('Теоретический материал', 2)
 
-# Таблица с командами
+# Таблица
 table = doc.add_table(rows=3, cols=2)
 table.style = 'Table Grid'
 table.autofit = False
@@ -70,43 +70,96 @@ for i, (left, right) in enumerate(data):
     cell_right = table.cell(i, 1)
     cell_left.text = left
     cell_right.text = right
-    # Выравнивание по левому краю
     for cell in (cell_left, cell_right):
-        for p in cell.paragraphs:
-            p.alignment = 0  # left
+        for para in cell.paragraphs:
+            para.alignment = 0
 
-doc.add_paragraph()  # пустая строка
+doc.add_paragraph()
 
 # Порядок работы
 doc.add_heading('Порядок работы:', 2)
 doc.add_heading('Задание 1.', 3)
 p = doc.add_paragraph('Оформить следующий текст по образцу.')
-p.alignment = 1  # по центру
+p.alignment = 1
 
-doc.add_paragraph()  # пустая строка
+doc.add_paragraph()
 
-# --- Раздел с колонками ---
-# Добавляем разрыв раздела, чтобы следующие абзацы были в двух колонках
-doc.add_section(WD_BREAK.CONTINUOUS)
-section = doc.sections[-1]
+# --- Создаем новый раздел с двумя колонками (непрерывный) ---
+new_section = doc.add_section(WD_SECTION_START.CONTINUOUS)
 # Устанавливаем 2 колонки
-sectPr = section._sectPr
+sectPr = new_section._sectPr
 cols = OxmlElement('w:cols')
 cols.set(qn('w:num'), '2')
 sectPr.append(cols)
 
-# Первый текст "Страна мечты"
+# Заголовок "Страна мечты"
 heading1 = doc.add_heading('Страна мечты', 2)
 heading1.alignment = 1
 
+# Текст с буквицей
 p_text1 = doc.add_paragraph()
-apply_bullet_style(p_text1)  # буквица для первого слова "Авверно" (описка в оригинале)
-# В оригинале: "Авверно, каждый мечтает..."
+# Сначала добавляем текст, потом применяем буквицу
 p_text1.add_run('Авверно, каждый мечтает хоть раз в жизни побывать в стране Бизе и Равеля, Гюго и Мопассана, «отца мушкетеров» Александра Дома и удивительного мечтателя, писателя-фантаста Жюля Верна.')
-p_text1.alignment = 0
+apply_dropcap(p_text1)
 
 p_text2 = doc.add_paragraph('Франция — одно из крупных государств западной Европы. Оно раскинулось от суровых скалистых берегов Нормандии до теплого лазурного берега Средиземного моря. Когда-то всю территорию Франции покрывали густые леса. Ныне они сохранились главным образом в горах. Самые высокие горы здесь — снежные Альпы. По обширным низменностям текут полноводные реки — Сена, Рона, Луара, Гаронна.')
 
+# Разрыв колонки
+p_break = doc.add_paragraph()
+set_column_break(p_break)
+
+# Заголовок "Париж"
+heading2 = doc.add_heading('Париж', 2)
+heading2.alignment = 1
+
+p_text3 = doc.add_paragraph('Париж — столица Франции, ее сердце, ее мозг, ее слава. Париж — один из красивейших городов мира. Ни один город страны не принес Франции такой популярности в мире, как Париж.')
+p_text4 = doc.add_paragraph('Символ Парижа — знаменитая Эйфелевая башня, построенная в 1889 году по проекту инженера Эйфеля для Всемирной выставки. Высота башни 319 метров. На третьем этаже находится музей Эйфеля.')
+p_text5 = doc.add_paragraph('В начале строительства Эйфелевой башни 50 известных французов, в числе которых Дома, написали петицию протеста против этого «железного монстра», который испортит весь вид Парижа. В наше время Эйфелевая башня стала одним из самых посещаемых туристами памятником города.')
+
+# --- Возвращаемся к одной колонке ---
+new_section2 = doc.add_section(WD_SECTION_START.CONTINUOUS)
+sectPr = new_section2._sectPr
+cols = OxmlElement('w:cols')
+cols.set(qn('w:num'), '1')
+sectPr.append(cols)
+
+doc.add_paragraph()
+
+# Контрольные вопросы
+doc.add_heading('Контрольные вопросы:', 2)
+questions = [
+    "1. Для чего в тексте оформляют колонки?",
+    "2. Какое максимальное количество колонок можно создать в MS Word?",
+    "3. Что такое буквица, ее назначение?"
+]
+for q in questions:
+    doc.add_paragraph(q)
+
+# Номер страницы 13 в нижнем колонтитуле последнего раздела
+footer = new_section2.footer
+footer_para = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+footer_para.text = "13"
+footer_para.alignment = 2
+
+# Сохраняем DOCX
+docx_path = "practical_work_6.docx"
+doc.save(docx_path)
+
+# Конвертация в RTF с помощью LibreOffice
+rtf_path = "practical_work_6.rtf"
+try:
+    subprocess.run([
+        "libreoffice", "--headless", "--convert-to", "rtf",
+        "--outdir", os.path.dirname(os.path.abspath(docx_path)),
+        docx_path
+    ], check=True)
+    print(f"RTF файл создан: {rtf_path}")
+except FileNotFoundError:
+    print("LibreOffice не найден. Установите LibreOffice или используйте альтернативный способ конвертации.")
+    print("DOCX файл сохранён как", docx_path)
+except subprocess.CalledProcessError as e:
+    print("Ошибка конвертации:", e)
+    print("DOCX файл доступен:", docx_path)
 # Разрыв колонки
 p_break = doc.add_paragraph()
 set_column_break(p_break)
