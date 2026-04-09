@@ -1,1 +1,29 @@
-Nothing needs to be added to .gitignore since only a Python script file (`scripts/check_repo.py`) was added, which is a source code file that should be tracked in version control. No build artifacts, dependencies, temporary files, or other ignorable content was detected in the changes.
+```
+# Generated from file changes
+# Processed data files (temporary/build artifacts)
+data/processed/
+
+# Python specific
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+*.env.*
+```
