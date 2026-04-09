@@ -1,41 +1,170 @@
-Конечно. Вот текст и формулы из задания №1, оформленные так, чтобы их было удобно перенести в документ. Для математических выражений я использовал стандартную разметку.
+import subprocess
+import os
+from docx import Document
+from docx.shared import Inches, Pt, Cm
+from docx.enum.text import WD_BREAK, WD_UNDERLINE
+from docx.enum.style import WD_STYLE_TYPE
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
+from docx.oxml.shared import OxmlElement, qn
 
----
+def set_column_break(paragraph):
+    """Вставляет разрыв колонки."""
+    run = paragraph.add_run()
+    br = OxmlElement('w:br')
+    br.set(qn('w:type'), 'column')
+    run._element.append(br)
 
-### **Задание 1.**
-**Набрать математические выражения вместе с текстом по образцу.**
+def apply_bullet_style(paragraph):
+    """Применяет стиль для буквицы (имитация)."""
+    # Увеличиваем первую букву через run
+    if paragraph.text:
+        first_char = paragraph.text[0]
+        rest_text = paragraph.text[1:]
+        paragraph.clear()
+        run_first = paragraph.add_run(first_char)
+        run_first.font.size = Pt(36)
+        run_first.font.bold = True
+        run_rest = paragraph.add_run(rest_text)
 
-**Квадратное уравнение** – уравнение $ax^2 + bx + c = 0$, где $a, b$ и $c$ – заданные числа, причём $a \neq 0$, $x$ – неизвестное число.
-Коэффициенты квадратного уравнения называют так: $a$ – первый или старший коэффициент, $b$ – второй коэффициент, $c$ – свободный член.
+# Создаем документ Word
+doc = Document()
 
-Примеры квадратных уравнений:
-$$2x^2 - x - 1 = 0, \quad 3x^2 + 7x = 0.$$
+# Настройка страницы: отступы и колонки (зададим позже для секции с колонками)
+section = doc.sections[0]
+section.page_width = Cm(21.0)
+section.page_height = Cm(29.7)
+section.left_margin = Cm(2.0)
+section.right_margin = Cm(2.0)
+section.top_margin = Cm(2.0)
+section.bottom_margin = Cm(2.0)
 
-Неполное квадратное уравнение – квадратное уравнение $ax^2 + bx + c = 0$, у которого хотя бы один из коэффициентов $b$ или $c$ равен нулю.
+# Заголовок
+title = doc.add_heading('Практическая работа № 6 «Оформление документа. Колонки»', 1)
+title.alignment = 1  # По центру
 
-Примеры неполных квадратных уравнений:
-$$x^2 = 0, \quad 5x^2 + 4 = 0, \quad 8x^2 + x = 0.$$
+# Цель
+p = doc.add_paragraph()
+p.add_run('Цель работы:').bold = True
+p.add_run(' научиться создавать и редактировать колонки в программе MS Word.')
 
-Формула корней квадратного уравнения:
-$$x_{1,2} = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+# Теоретический материал (заголовок)
+doc.add_heading('Теоретический материал', 2)
 
-Например, уравнение $3x^2 + 5x - 2 = 0$ имеет два корня:
-$$x_{1,2} = \frac{-5 \pm \sqrt{25 + 24}}{6} = \frac{-5 \pm 7}{6}, \quad x_1 = \frac{1}{3}, \quad x_2 = -2;$$
+# Таблица с командами
+table = doc.add_table(rows=3, cols=2)
+table.style = 'Table Grid'
+table.autofit = False
+table.allow_autofit = False
+table.columns[0].width = Cm(5.0)
+table.columns[1].width = Cm(10.0)
 
-Приведённое квадратное уравнение – уравнение вида
-$$x^2 + px + q = 0.$$
+data = [
+    ("Создание колонок", "Команда Разметка страницы – Колонки – Другие колонки"),
+    ("Переход на другую колонку", "Команда Разметка страницы – Разрывы – Столбец"),
+    ("Вставка буквицы", "команда Вставка - Буквица")
+]
 
-Формула корней приведённого квадратного уравнения:
-$$x_{1,2} = -\frac{p}{2} \pm \sqrt{\frac{p^2}{4} - q}$$
+for i, (left, right) in enumerate(data):
+    cell_left = table.cell(i, 0)
+    cell_right = table.cell(i, 1)
+    cell_left.text = left
+    cell_right.text = right
+    # Выравнивание по левому краю
+    for cell in (cell_left, cell_right):
+        for p in cell.paragraphs:
+            p.alignment = 0  # left
 
-Например, корни уравнения $x^2 - 6x - 7 = 0$ таковы:
-$$x_{1,2} = 3 \pm \sqrt{9 + 7} = 3 \pm 4, \quad x_1 = 7, \quad x_2 = -1.$$
+doc.add_paragraph()  # пустая строка
 
----
+# Порядок работы
+doc.add_heading('Порядок работы:', 2)
+doc.add_heading('Задание 1.', 3)
+p = doc.add_paragraph('Оформить следующий текст по образцу.')
+p.alignment = 1  # по центру
 
-### **Ответы на контрольные вопросы:**
+doc.add_paragraph()  # пустая строка
 
-1.  **Для чего необходим редактор формул?**
-    Редактор формул нужен для корректного и аккуратного написания сложных математических выражений (дробей, корней, интегралов, спецсимволов), которые невозможно набрать обычным текстом в одну строку.
-2.  **Как редактировать формулы в текстовом редакторе?**
-    Чтобы отредактировать уже созданную формулу, достаточно дважды щелкнуть по ней левой кнопкой мыши — откроется конструктор формул. Если нужно удалить формулу целиком, выделите её и нажмите клавишу **Delete**.
+# --- Раздел с колонками ---
+# Добавляем разрыв раздела, чтобы следующие абзацы были в двух колонках
+doc.add_section(WD_BREAK.CONTINUOUS)
+section = doc.sections[-1]
+# Устанавливаем 2 колонки
+sectPr = section._sectPr
+cols = OxmlElement('w:cols')
+cols.set(qn('w:num'), '2')
+sectPr.append(cols)
+
+# Первый текст "Страна мечты"
+heading1 = doc.add_heading('Страна мечты', 2)
+heading1.alignment = 1
+
+p_text1 = doc.add_paragraph()
+apply_bullet_style(p_text1)  # буквица для первого слова "Авверно" (описка в оригинале)
+# В оригинале: "Авверно, каждый мечтает..."
+p_text1.add_run('Авверно, каждый мечтает хоть раз в жизни побывать в стране Бизе и Равеля, Гюго и Мопассана, «отца мушкетеров» Александра Дома и удивительного мечтателя, писателя-фантаста Жюля Верна.')
+p_text1.alignment = 0
+
+p_text2 = doc.add_paragraph('Франция — одно из крупных государств западной Европы. Оно раскинулось от суровых скалистых берегов Нормандии до теплого лазурного берега Средиземного моря. Когда-то всю территорию Франции покрывали густые леса. Ныне они сохранились главным образом в горах. Самые высокие горы здесь — снежные Альпы. По обширным низменностям текут полноводные реки — Сена, Рона, Луара, Гаронна.')
+
+# Разрыв колонки
+p_break = doc.add_paragraph()
+set_column_break(p_break)
+
+# Второй текст "Париж"
+heading2 = doc.add_heading('Париж', 2)
+heading2.alignment = 1
+
+p_text3 = doc.add_paragraph('Париж — столица Франции, ее сердце, ее мозг, ее слава. Париж — один из красивейших городов мира. Ни один город страны не принес Франции такой популярности в мире, как Париж.')
+p_text4 = doc.add_paragraph('Символ Парижа — знаменитая Эйфелевая башня, построенная в 1889 году по проекту инженера Эйфеля для Всемирной выставки. Высота башни 319 метров. На третьем этаже находится музей Эйфеля.')
+p_text5 = doc.add_paragraph('В начале строительства Эйфелевой башни 50 известных французов, в числе которых Дома, написали петицию протеста против этого «железного монстра», который испортит весь вид Парижа. В наше время Эйфелевая башня стала одним из самых посещаемых туристами памятником города.')
+
+# Конец колонок – возврат к одной колонке
+doc.add_section(WD_BREAK.CONTINUOUS)
+section = doc.sections[-1]
+sectPr = section._sectPr
+cols = OxmlElement('w:cols')
+cols.set(qn('w:num'), '1')
+sectPr.append(cols)
+
+doc.add_paragraph()  # пустая строка
+
+# Контрольные вопросы
+doc.add_heading('Контрольные вопросы:', 2)
+questions = [
+    "1. Для чего в тексте оформляют колонки?",
+    "2. Какое максимальное количество колонок можно создать в MS Word?",
+    "3. Что такое буквица, ее назначение?"
+]
+for q in questions:
+    doc.add_paragraph(q)
+
+# Номер страницы 13 (в нижнем колонтитуле)
+footer = section.footer
+footer_para = footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
+footer_para.text = "13"
+footer_para.alignment = 2  # правое выравнивание
+
+# Сохраняем DOCX
+docx_path = "practical_work_6.docx"
+doc.save(docx_path)
+
+# Конвертация в RTF с помощью LibreOffice (требуется установленный LibreOffice)
+rtf_path = "practical_work_6.rtf"
+try:
+    # Используем unoconv или прямой вызов libreoffice
+    subprocess.run([
+        "libreoffice", "--headless", "--convert-to", "rtf",
+        "--outdir", os.path.dirname(os.path.abspath(docx_path)),
+        docx_path
+    ], check=True)
+    print(f"RTF файл создан: {rtf_path}")
+except FileNotFoundError:
+    print("LibreOffice не найден. Установите LibreOffice или используйте альтернативный способ конвертации.")
+    print("DOCX файл сохранён как", docx_path)
+except subprocess.CalledProcessError as e:
+    print("Ошибка конвертации:", e)
+    print("DOCX файл доступен:", docx_path)
+
+# Удаляем временный DOCX (опционально)
+# os.remove(docx_path)
