@@ -1,7 +1,3 @@
-vless://6aeb78b3-d73c-44c8-b7f6-39bd5c1008a1@45.67.15.57:443?security=reality&encryption=none&pbk=kF3TSdUofDoKo1TqZcqY9dq1SoQ4iu_bQHAf2mVuWmk&headerType=none&fp=chrome&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=sw2.skywhirl.store&sid=549e6c3aae909b1c#%F0%9F%87%B8%F0%9F%87%AA+Sweden%2C+Stockholm+%7C+%5BBL%5D
-vless://66d5302c-17f1-4c36-8e27-fa157d815293@46.173.25.146:443?security=reality&encryption=none&pbk=djTtGqd0XWqtt_WHukU7BTPQSn9o7gIpAosAxMy8tUo&headerType=none&fp=firefox&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=ru.crunch-crunch.com&sid=ea1058117be12087#%F0%9F%87%B7%F0%9F%87%BA+Russia%2C+St+Petersburg+%7C+%5BBL%5D
-vless://66d5302c-17f1-4c36-8e27-fa157d815293@169.40.2.37:443?security=reality&encryption=none&pbk=djTtGqd0XWqtt_WHukU7BTPQSn9o7gIpAosAxMy8tUo&headerType=none&fp=firefox&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=lv.crunch-crunch.com&sid=ea1058117be12087#%F0%9F%87%B1%F0%9F%87%BB+Latvia%2C+Riga+%7C+%F0%9F%8C%90+%7C+%5BIPv6%5D+%7C+%5BBL%5D
-
 
 {
   "burstObservatory": {
