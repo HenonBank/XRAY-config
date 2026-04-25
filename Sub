@@ -1,6 +1,3 @@
-vless://74d3057f-5d2b-4d21-8819-3b387d47c0a4@5.188.224.167:2083?mode=gun&security=reality&encryption=none&authority=&pbk=J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ&fp=chrome&allowinsecure=0&type=grpc&serviceName=UpdateService&sni=ir.ozone.ru&sid=6da16b1335651b38#%F0%9F%87%B7%F0%9F%87%BA+LTE+%7C+EdgeCenter+%7C+%2362
-vless://6aeb78b3-d73c-44c8-b7f6-39bd5c1008a1@45.67.15.57:443?security=reality&encryption=none&pbk=kF3TSdUofDoKo1TqZcqY9dq1SoQ4iu_bQHAf2mVuWmk&headerType=none&fp=chrome&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=sw2.skywhirl.store&sid=549e6c3aae909b1c#%F0%9F%87%B8%F0%9F%87%AA+LTE+%7C+Hostup+%7C+%2399
-
 
 {
   "burstObservatory": {
