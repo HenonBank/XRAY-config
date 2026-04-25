@@ -1,0 +1,1665 @@
+{
+  "burstObservatory": {
+    "pingConfig": {
+      "connectivity": "http://connectivitycheck.platform.hicloud.com/generate_204",
+      "destination": "http://www.google.com/generate_204",
+      "httpMethod": "HEAD",
+      "interval": "5m",
+      "sampling": 1,
+      "timeout": "10s"
+    },
+    "subjectSelector": [
+      "proxy-"
+    ]
+  },
+  "dns": {
+    "queryStrategy": "UseIPv4",
+    "servers": [
+      "1.1.1.1",
+      "1.0.0.1"
+    ]
+  },
+  "inbounds": [
+    {
+      "listen": "127.0.0.1",
+      "port": 10808,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "tls",
+          "http",
+          "quic"
+        ],
+        "enabled": true,
+        "excludedDomains": [],
+        "metadataOnly": false,
+        "routeOnly": true
+      },
+      "tag": "socks-in"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10809,
+      "protocol": "http",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "tls",
+          "http",
+          "quic"
+        ],
+        "enabled": true,
+        "excludedDomains": [],
+        "metadataOnly": false,
+        "routeOnly": true
+      },
+      "tag": "http"
+    },
+    {
+      "listen": "127.0.0.1",
+      "port": 10820,
+      "protocol": "socks",
+      "settings": {
+        "auth": "noauth",
+        "udp": true
+      },
+      "sniffing": {
+        "destOverride": [
+          "tls",
+          "http",
+          "quic"
+        ],
+        "enabled": true,
+        "excludedDomains": [],
+        "metadataOnly": false,
+        "routeOnly": true
+      },
+      "tag": "socks-direct"
+    }
+  ],
+  "log": {
+    "access": "",
+    "dnsLog": true,
+    "loglevel": "Warning"
+  },
+  "outbounds": [
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "84.201.152.16",
+            "port": 51191,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "765d27af-6a6e-44e0-85f0-49c96afab7ce",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "qq",
+          "publicKey": "SbVKOEMjK0sIlbwg4akyBg5mL5KZwwB-ed4eEE7YnRc",
+          "serverName": "ads.x5.ru",
+          "shortId": "b3bd6f5b168c4d61"
+        }
+      },
+      "tag": "proxy-1"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "217.16.31.159",
+            "port": 443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "15943137-09d0-4cb6-93e9-9df6a19ea880",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "random",
+          "publicKey": "SHIYN7zN9aFVxwKK-bIvDbhUgtHvlBhDi1qSl2sWwRw",
+          "serverName": "max.ru",
+          "shortId": "fb916778d4"
+        }
+      },
+      "tag": "proxy-2"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "74.119.194.241",
+            "port": 443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "f80d90f1-fc54-4843-bd2b-d77b0b571ecf",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "MA_hDjnzRmn4qL60EqyybXYzuE_2Ap8FhJQ82szMDww",
+          "serverName": "store.steampowered.com",
+          "shortId": "1434b433",
+          "show": false,
+          "spiderX": "/"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-3"
+    },
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "us5.fastlanehosting.ru",
+            "port": 8443,
+            "users": [
+              {
+                "id": "756758ca-8d6c-4c4f-ac81-795c48ba0fc6",
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "disableSystemRoot": false,
+          "enableSessionResumption": false,
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "fingerprint": "chrome",
+          "serverName": "us5.fastlanehosting.ru"
+        },
+        "wsSettings": {
+          "headers": {
+            "Host": "us5.fastlanehosting.ru"
+          },
+          "path": "/"
+        }
+      },
+      "tag": "proxy-5"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "ch2.fastlanehosting.ru",
+            "port": 443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "056a484a-e79d-445e-bd50-b5781e3ecfbe",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "Z--Ieq3GtHx_Qtqj3NUyK5wY2foVBtlOkyzXqESeswU",
+          "serverName": "store.steampowered.com",
+          "shortId": "0c80cc39",
+          "show": false,
+          "spiderX": "/"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-6"
+    },
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "ch2.fastlanehosting.ru",
+            "port": 4443,
+            "users": [
+              {
+                "id": "a24fa3be-727c-4b1e-a0ee-1df2a0a0a6d9",
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "disableSystemRoot": false,
+          "enableSessionResumption": false,
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "fingerprint": "chrome",
+          "serverName": "ch2.fastlanehosting.ru"
+        },
+        "wsSettings": {
+          "headers": {
+            "Host": "ch2.fastlanehosting.ru"
+          },
+          "path": "/"
+        }
+      },
+      "tag": "proxy-7"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "87.251.69.48",
+            "port": 443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "1bfd045c-3c64-4f27-874f-8e0b9da23fc8",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "fp_r7Tz3YdOZUY1wmo21U5xAoqyhHhb8l0q-py3JARo",
+          "serverName": "sun6-22.userapi.com",
+          "shortId": "f5e89824",
+          "show": false,
+          "spiderX": "/"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-8"
+    },
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "at16.fastlanehosting.ru",
+            "port": 4443,
+            "users": [
+              {
+                "id": "333a62ce-6ae2-4e35-9f8a-4b80a14a4c51",
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "disableSystemRoot": false,
+          "enableSessionResumption": false,
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "fingerprint": "chrome",
+          "serverName": "at16.fastlanehosting.ru"
+        },
+        "wsSettings": {
+          "headers": {
+            "Host": "at16.fastlanehosting.ru"
+          },
+          "path": "/"
+        }
+      },
+      "tag": "proxy-9"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "87.251.69.48",
+            "port": 8443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "",
+                "id": "2ee2b77f-e4cd-4e5d-af22-f9d919eeadd5",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "disableSystemRoot": false,
+          "enableSessionResumption": false,
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "fingerprint": "chrome",
+          "serverName": "at16.fastlanehosting.ru"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-10"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "87.251.69.48",
+            "port": 5443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "",
+                "id": "859cb825-0458-4af9-8f21-4ff142dc69a9",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "xhttp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "xVWSScN9YLNPwJDaFhna5MvWruhT31pMEuOJdmJe0Eg",
+          "serverName": "ivi.ru",
+          "shortId": "7685dfed",
+          "show": false,
+          "spiderX": "/"
+        },
+        "xHTTPSettings": {
+          "path": "/movies",
+          "host": "at16.fastlanehosting.ru",
+          "mode": "auto"
+        }
+      },
+      "tag": "proxy-11"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "jp1.fastlanehosting.ru",
+            "port": 443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "d83b97f6-bc7c-459a-b8aa-a5a68ede0907",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "I8b8Iy8nSqWEVFXRdIgf0uF-2ng1NPKljk_kqdZwPEs",
+          "serverName": "store.steampowered.com",
+          "shortId": "ece3d177dd",
+          "show": false,
+          "spiderX": "/"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-12"
+    },
+    {
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "jp1.fastlanehosting.ru",
+            "port": 8443,
+            "users": [
+              {
+                "id": "2875fb2f-5f87-4481-9d94-6795695d3b4f",
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "ws",
+        "security": "tls",
+        "tlsSettings": {
+          "allowInsecure": false,
+          "disableSystemRoot": false,
+          "enableSessionResumption": false,
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "fingerprint": "chrome",
+          "serverName": "jp1.fastlanehosting.ru"
+        },
+        "wsSettings": {
+          "headers": {
+            "Host": "jp1.fastlanehosting.ru"
+          },
+          "path": "/"
+        }
+      },
+      "tag": "proxy-13"
+    },
+    {
+      "protocol": "vless",
+      "settings": {
+        "vnext": [
+          {
+            "address": "nl9.fastlanehosting.ru",
+            "port": 12443,
+            "users": [
+              {
+                "encryption": "none",
+                "flow": "xtls-rprx-vision",
+                "id": "2aaa3cf6-6998-4341-8def-73ca5ae0fd68",
+                "level": 8,
+                "security": "auto"
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "tcp",
+        "security": "reality",
+        "realitySettings": {
+          "fingerprint": "chrome",
+          "publicKey": "WEt7MELT6XDcaByvhZkgD_YzhjQ0VgkpUV-RtV9ZqDo",
+          "serverName": "steampowered.com",
+          "shortId": "333d146b7c7e",
+          "show": false,
+          "spiderX": "/ray"
+        },
+        "tcpSettings": {
+          "header": {
+            "type": "none"
+          }
+        }
+      },
+      "tag": "proxy-14"
+    },
+    {
+      "protocol": "freedom",
+      "tag": "direct"
+    },
+    {
+      "protocol": "blackhole",
+      "tag": "block"
+    }
+  ],
+  "policy": {
+    "levels": {
+      "8": {
+        "bufferSize": 3,
+        "connIdle": 300,
+        "downlinkOnly": 4,
+        "handshake": 3,
+        "uplinkOnly": 2
+      }
+    },
+    "system": {}
+  },
+  "remarks": "⚡️ Авто-выбор VLESS",
+  "routing": {
+    "balancers": [
+      {
+        "selector": [
+          "proxy-"
+        ],
+        "strategy": {
+          "type": "leastPing"
+        },
+        "tag": "proxy-balancer"
+      }
+    ],
+    "domainMatcher": "hybrid",
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "ip": [
+          "geoip:private"
+        ],
+        "outboundTag": "block"
+      },
+      {
+        "type": "field",
+        "domain": [
+          "domain:kinopoisk.ru",
+          "domain:kinopoisk-ru.clstorage.net",
+          "domain:yandex",
+          "domain:xn--d1acpjx3f.xn--p1ai",
+          "domain:berizaryad.ru",
+          "domain:cabconnect.org",
+          "domain:clck.ru",
+          "domain:clstorage.net",
+          "domain:driveawaytaxi.org",
+          "domain:elama.ru",
+          "domain:gogettaxi.org",
+          "domain:goup.ai",
+          "domain:hayya.ae",
+          "domain:meteum.ai",
+          "domain:my-manager-account.com",
+          "domain:naydex.net",
+          "domain:rostaxi.org",
+          "domain:shedevrum.ai",
+          "domain:sourcecraft.dev",
+          "domain:static-storage.net",
+          "domain:support-uber.com",
+          "domain:taxiaid.org",
+          "domain:taxiguru.org",
+          "domain:taxitax.org",
+          "domain:turbopages.org",
+          "domain:ya.cc",
+          "domain:ya.ru",
+          "domain:yandex-bank.net",
+          "domain:yandex-team.ru",
+          "domain:yandex.aero",
+          "domain:yandex.asia",
+          "domain:yandex.az",
+          "domain:yandex.by",
+          "domain:yandex.cloud",
+          "domain:yandex.co.il",
+          "domain:yandex.com",
+          "domain:yandex.com.am",
+          "domain:yandex.com.ge",
+          "domain:yandex.com.ru",
+          "domain:yandex.com.tr",
+          "domain:yandex.com.ua",
+          "domain:yandex.de",
+          "domain:yandex.ee",
+          "domain:yandex.eu",
+          "domain:yandex.fi",
+          "domain:yandex.fr",
+          "domain:yandex.jobs",
+          "domain:yandex.kg",
+          "domain:yandex.kz",
+          "domain:yandex.lt",
+          "domain:yandex.lv",
+          "domain:yandex.md",
+          "domain:yandex.mobi",
+          "domain:yandex.net",
+          "domain:yandex.org",
+          "domain:yandex.pl",
+          "domain:yandex.ru",
+          "domain:yandex.st",
+          "domain:yandex.sx",
+          "domain:yandex.tj",
+          "domain:yandex.tm",
+          "domain:yandex.tr",
+          "domain:yandex.ua",
+          "domain:yandex.uz",
+          "domain:yandexadexchange.net",
+          "domain:yandexcloud.net",
+          "domain:yandexcom.net",
+          "domain:yandexgo.com",
+          "domain:yandexlyceum.ru",
+          "domain:yandexwebcache.net",
+          "domain:yandexwebcache.org",
+          "domain:yango-b2b.com",
+          "domain:yango-team.com",
+          "domain:yango-tech.com",
+          "domain:yango.africa",
+          "domain:yango.ao",
+          "domain:yango.bh",
+          "domain:yango.co.il",
+          "domain:yango.com",
+          "domain:yango.fi",
+          "domain:yango.qa",
+          "domain:yango.taxi",
+          "domain:yango.tech",
+          "domain:yangofellowship.com",
+          "domain:yastat.net",
+          "domain:yastatic-net.ru",
+          "domain:yastatic.net",
+          "domain:yccdn.ru",
+          "domain:adfox.ru",
+          "domain:adfox.yandex.ru",
+          "domain:admetrica.ru",
+          "domain:ads.yandex",
+          "domain:ads.yandex.ru",
+          "domain:adv.yandex.com",
+          "domain:adv.yandex.ru",
+          "domain:an.yandex.ru",
+          "domain:appmetrica.yandex.com",
+          "domain:appmetrica.yandex.net",
+          "domain:appmetrica.yandex.ru",
+          "domain:appmetrica.yango.com",
+          "domain:bs.yandex.ru",
+          "domain:clck.yandex.ru",
+          "domain:counter.yandex.ru",
+          "domain:mc.yandex.ru",
+          "domain:metrika.yandex.com",
+          "domain:metrika.yandex.net",
+          "domain:metrika.yandex.ru",
+          "domain:webvisor.com",
+          "domain:webvisor.org",
+          "domain:yabs.yandex.ru",
+          "domain:yads.tech",
+          "domain:yandex-metrica.ru",
+          "domain:yandexmetrica.com",
+          "domain:yango-ads.com",
+          "full:adfstat.yandex.ru",
+          "full:ads.yandex.com",
+          "full:ads.yango.com",
+          "full:adsdk.yandex.ru",
+          "full:amc.yandex.ru",
+          "full:analytics.mobile.yandex.net",
+          "full:clck.yandex.com",
+          "full:clck.yandex.net",
+          "full:clck.yango.com",
+          "full:informer.yandex.ru",
+          "full:mc.yandex.com",
+          "full:mc.yandex.net",
+          "full:mc.yango.com",
+          "full:pixel.yandex.com",
+          "full:report.ap.yandex-net.ru",
+          "domain:dzen.ru",
+          "domain:log.dzen.ru",
+          "domain:ms.dzen.ru",
+          "domain:dzeninfra.ru",
+          "domain:apiok.ru",
+          "domain:insideok.ru",
+          "domain:odkl.ru",
+          "domain:odnoklassniki.ru",
+          "domain:ok.me",
+          "domain:ok.ru",
+          "domain:okl.lt",
+          "domain:oktech.ru",
+          "domain:okcdn.ru",
+          "full:st-ok-pts.cdn-vk.ru",
+          "full:st-ok.cdn-vk.ru",
+          "domain:mvk.com",
+          "domain:vk.cc",
+          "domain:vk.com",
+          "domain:vk.design",
+          "domain:vk.link",
+          "domain:vk.ru",
+          "domain:vkontakte.com",
+          "domain:vkontakte.ru",
+          "domain:adv.vk.com",
+          "domain:analytics.vk.com",
+          "domain:ms.vk.com",
+          "domain:ms.vk.ru",
+          "domain:target.vk.ru",
+          "domain:vk-analytics.ru",
+          "full:adblogger.vk.com",
+          "full:adblogger.vk.ru",
+          "full:ads.vk.com",
+          "full:ads.vk.ru",
+          "full:adv.vk.ru",
+          "full:advk.vk.ru",
+          "full:analytics.vk.ru",
+          "full:stats.vk-portal.net",
+          "full:target.vk.com",
+          "domain:cdn-vk.net",
+          "domain:cdn-vk.ru",
+          "domain:userapi.com",
+          "domain:userapi.ru",
+          "domain:vk-cdn.me",
+          "domain:vk-cdn.net",
+          "domain:vk-portal.net",
+          "domain:vkcache.com",
+          "domain:vkcdnservice.com",
+          "domain:vkcloud-static.ru",
+          "domain:vktech-static.ru",
+          "domain:vkuser.net",
+          "domain:vkusercdn.ru",
+          "domain:vkuserphoto.ru",
+          "domain:vkuseraudio.com",
+          "domain:vkuseraudio.net",
+          "domain:vkuseraudio.ru",
+          "domain:vkuserlive.com",
+          "domain:vkuserlive.net",
+          "domain:vkuservideo.com",
+          "domain:vkuservideo.net",
+          "domain:vkuservideo.ru",
+          "domain:vk.me",
+          "domain:vkmessenger.app",
+          "domain:vkmessenger.com",
+          "domain:vkpay.app",
+          "domain:vkpay.com",
+          "domain:vkpay.io",
+          "domain:vkpay.ru",
+          "domain:armgs.team",
+          "domain:bargipsy.com",
+          "domain:boom.ru",
+          "domain:boosty.to",
+          "domain:donationalerts.com",
+          "domain:hrtek.ru",
+          "domain:koddobra.ru",
+          "domain:lovina.app",
+          "domain:mail.ru",
+          "domain:mediumquality.ru",
+          "domain:memealerts.com",
+          "domain:movika.com",
+          "domain:sportmail.ru",
+          "domain:summerstage.ru",
+          "domain:tamtam.chat",
+          "domain:tech-mail.ru",
+          "domain:vk-apps.com",
+          "domain:vk-apps.ru",
+          "domain:vk-records.ru",
+          "domain:vk-stadium.ru",
+          "domain:vk.company",
+          "domain:vk.team",
+          "domain:vkclips.app",
+          "domain:vkcs.cloud",
+          "domain:vkfest.ru",
+          "domain:vkgo.app",
+          "domain:vklive.app",
+          "domain:vkvideo.ru",
+          "domain:yclients.com",
+          "domain:xn--80asgb.xn--p1ai",
+          "domain:xn--e1aigb.xn--p1ai",
+          "domain:ad.mail.ru",
+          "domain:ads.viqeo.tv",
+          "domain:adsadvisor.io",
+          "domain:alt-ad.mail.ru",
+          "domain:apptracer.ru",
+          "domain:cxhub.ru",
+          "domain:metrics.viqeo.tv",
+          "domain:myadx.net",
+          "domain:mytrk.link",
+          "domain:r.mail.ru",
+          "domain:radar.imgsmail.ru",
+          "domain:relap.mail.ru",
+          "domain:target.my.com",
+          "domain:top-fwz1.mail.ru",
+          "domain:tracker-api.my.com",
+          "domain:tracker.my.com",
+          "full:1l-hit.mail.ru",
+          "full:1l-hit.vkplay.ru",
+          "full:ad4.mail.ru",
+          "full:ads-integration.rustore.ru",
+          "full:ads.dahlmessenger.com",
+          "full:ads.icq.com",
+          "full:ads.rustore.ru",
+          "full:adsapp.dahlmessenger.com",
+          "full:adsapp.telega.info",
+          "full:adsapp.stage.telega.info",
+          "full:adv.rustore.ru",
+          "full:alt-r.my.com",
+          "full:an.mail.ru",
+          "full:b2.mail.ru",
+          "full:bs.mail.ru",
+          "full:click.rustore.ru",
+          "full:pixel.rustore.ru",
+          "full:r0.mail.ru",
+          "full:r0.mradx.net",
+          "full:r1.mail.ru",
+          "full:reklama.mail.ru",
+          "full:rs.mail.ru",
+          "full:sentry-ng.g.smailru.net",
+          "full:srch-telemeter10.g.smailru.net",
+          "full:sentry.dev-my.com",
+          "full:sentry.dev-my.games",
+          "full:sentry.rustore.ru",
+          "full:sentry.viqeo.tv",
+          "full:stacks.vk-portal.net",
+          "full:stats.dahlmessenger.com",
+          "full:stats.dev.telega.info",
+          "full:stats.rustore.ru",
+          "full:stats.telega.info",
+          "full:t.mail.ru",
+          "full:top-staging.mail.ru",
+          "full:whiteline.mail.ru",
+          "full:xray.mail.ru",
+          "domain:appsmail.ru",
+          "domain:attachmail.ru",
+          "domain:attachmy.com",
+          "domain:bizmrg.com",
+          "domain:cdnmail.ru",
+          "domain:datacloudmy.com",
+          "domain:imgsmail.ru",
+          "domain:mpgw-my.com",
+          "domain:mradx.net",
+          "domain:mrgcdn.ru",
+          "domain:mycdn.me",
+          "domain:mytopf.com",
+          "domain:smailru.net",
+          "domain:staticmy.com",
+          "domain:vmailru.net",
+          "domain:bk.ru",
+          "domain:inbox.ru",
+          "domain:internet.ru",
+          "domain:list.ru",
+          "domain:xmail.ru",
+          "domain:cups.online",
+          "domain:gamescup.ru",
+          "domain:mlbootcamp.ru",
+          "domain:russiandesigncup.ru",
+          "domain:algoritmika.org",
+          "domain:code-class.ru",
+          "domain:gb.ru",
+          "domain:lerna.ru",
+          "domain:skbx.pro",
+          "domain:skillbox.pro",
+          "domain:skillbox.ru",
+          "domain:skillfactory.ru",
+          "domain:tetrika-school.ru",
+          "domain:uchi.ru",
+          "domain:umschool.net",
+          "domain:yaklass.ru",
+          "domain:cybersport.ru",
+          "domain:epicevents.gg",
+          "domain:esforce.com",
+          "domain:esforce.ru",
+          "domain:ruhub.tv",
+          "domain:ciciq.net",
+          "domain:goicq.org",
+          "domain:icq-download.com",
+          "domain:icq-mobile.com",
+          "domain:icq-online.com",
+          "domain:icq-phone.com",
+          "domain:icq-phone.org",
+          "domain:icq.asia",
+          "domain:icq.at",
+          "domain:icq.biz",
+          "domain:icq.com",
+          "domain:icq.de",
+          "domain:icq.fr",
+          "domain:icq.eu",
+          "domain:icq.im",
+          "domain:icq.lt",
+          "domain:icq.mobi",
+          "domain:icq.org",
+          "domain:icq.ru",
+          "domain:icq.sg",
+          "domain:icq2mobile.com",
+          "domain:icq5.com",
+          "domain:icqanywhere.com",
+          "domain:icqbrasil.com",
+          "domain:icqbrazil.com",
+          "domain:icqchat.com",
+          "domain:icqflirting.com",
+          "domain:icqgame.com",
+          "domain:icqgames.com",
+          "domain:icqkids.com",
+          "domain:icqmail.com",
+          "domain:icqmail.net",
+          "domain:icqonline.com",
+          "domain:icqpassword.com",
+          "domain:icqpeople.com",
+          "domain:icqservers.com",
+          "domain:icqservice.com",
+          "domain:icqsupportteam.com",
+          "domain:icqsystem.com",
+          "domain:icqsystems.com",
+          "domain:icqtoday.com",
+          "domain:icqtutor.com",
+          "domain:icqvideo.com",
+          "domain:mailicq.org",
+          "domain:mirabilis.com",
+          "domain:mirandaicq.com",
+          "domain:mobile-icq.com",
+          "domain:mobileicq.com",
+          "domain:xn-----6kc7adj0c9esa.com",
+          "domain:xn----7sbaba0dc6cdn7cxcj.com",
+          "domain:xn----7sbabae2a0bnvtsfr4loc.com",
+          "domain:xn----7sbbab6bregnh7b8if5b.com",
+          "domain:xn----7sbbamm1bv2bh7i.com",
+          "domain:xn----8sbaroledu6bi7j.com",
+          "domain:xn----8sbeoy5bze.com",
+          "domain:xn--80aqcf7a6do.com",
+          "domain:max.ru",
+          "domain:oneme.ru",
+          "domain:sferum-dev.ru",
+          "domain:sferum.ru",
+          "domain:dev-my.com",
+          "domain:my.com",
+          "domain:dev-my.games",
+          "domain:it-territory.com",
+          "domain:knightspeak.com",
+          "domain:my.games",
+          "domain:pixonic.com",
+          "domain:prod-my.games",
+          "domain:rustore.ru",
+          "domain:rustore.team",
+          "domain:rustore.tv",
+          "domain:tarantool.io",
+          "domain:tarantoolplus.ru",
+          "domain:aodahl.com",
+          "domain:dahl.su",
+          "domain:dahlmessenger.com",
+          "domain:telega.info",
+          "domain:telega.me",
+          "domain:tusco.ru",
+          "domain:uma.media",
+          "domain:viqeo.tv",
+          "domain:viqeotv.com",
+          "domain:vkplay-arena.ru",
+          "domain:vkplay.ru",
+          "domain:vkplay.live",
+          "domain:youla.io",
+          "domain:youla.ru",
+          "domain:government.ru",
+          "domain:gov.ru",
+          "domain:gosuslugi.ru",
+          "domain:gu-st.ru",
+          "domain:emias.info",
+          "domain:mgfoms.ru",
+          "domain:edu.ru",
+          "domain:cbr.ru",
+          "domain:cikrf.ru",
+          "domain:ebs.ru",
+          "domain:goskey.ru",
+          "domain:grfc.ru",
+          "domain:izbirkom.ru",
+          "domain:kremlin.ru",
+          "domain:mil.ru",
+          "domain:nalog.ru",
+          "domain:xn--80ajghhoc2aj1c8b.xn--p1ai",
+          "domain:mos.ru",
+          "domain:mosreg.ru",
+          "domain:spb.ru",
+          "domain:sevastopol.ru",
+          "domain:adygeya.ru",
+          "domain:bashkiria.ru",
+          "domain:buryatia.ru",
+          "domain:chuvashia.ru",
+          "domain:crimea.ru",
+          "domain:dagestan.ru",
+          "domain:grozny.ru",
+          "domain:i-ola.ru",
+          "domain:izhevsk.ru",
+          "domain:kalmykia.ru",
+          "domain:karelia.ru",
+          "domain:kazan.ru",
+          "domain:kchr.ru",
+          "domain:khakassia.ru",
+          "domain:mari-el.ru",
+          "domain:mari.ru",
+          "domain:mordovia.ru",
+          "domain:nalchik.ru",
+          "domain:ptz.ru",
+          "domain:rkomi.ru",
+          "domain:tatarstan.ru",
+          "domain:tuva.ru",
+          "domain:udm.ru",
+          "domain:udmurtia.ru",
+          "domain:ulan-ude.ru",
+          "domain:vladikavkaz.ru",
+          "domain:yakutia.ru",
+          "domain:altai.ru",
+          "domain:chita.ru",
+          "domain:kamchatka.ru",
+          "domain:khabarovsk.ru",
+          "domain:khv.ru",
+          "domain:krasnodar.su",
+          "domain:krasnoyarsk.ru",
+          "domain:kuban.ru",
+          "domain:marine.ru",
+          "domain:perm.ru",
+          "domain:stavropol.ru",
+          "domain:stv.ru",
+          "domain:vl.ru",
+          "domain:vladivostok.ru",
+          "domain:amur.ru",
+          "domain:arkhangelsk.ru",
+          "domain:astrakhan.ru",
+          "domain:belgorod.ru",
+          "domain:bir.ru",
+          "domain:bryansk.ru",
+          "domain:cbg.ru",
+          "domain:chel.ru",
+          "domain:chelyabinsk.ru",
+          "domain:ekburg.ru",
+          "domain:xn--80acgfbsl1azdqr.xn--p1ai",
+          "domain:irk.ru",
+          "domain:irkutsk.ru",
+          "domain:ivanovo.ru",
+          "domain:jar.ru",
+          "domain:kaluga.ru",
+          "domain:kemerovo.ru",
+          "domain:kirov.ru",
+          "domain:koenig.ru",
+          "domain:kostroma.ru",
+          "domain:kurgan.ru",
+          "domain:kursk.ru",
+          "domain:lipetsk.ru",
+          "domain:magadan.ru",
+          "domain:murmansk.ru",
+          "domain:nn.ru",
+          "domain:nov.ru",
+          "domain:novosibirsk.ru",
+          "domain:nsk.ru",
+          "domain:omsk.ru",
+          "domain:orb.ru",
+          "domain:oryol.ru",
+          "domain:penza.ru",
+          "domain:psk",
+          "domain:psk.ru",
+          "domain:pskov.ru",
+          "domain:rnd.ru",
+          "domain:ryazan.ru",
+          "domain:sakhalin.ru",
+          "domain:samara.ru",
+          "domain:saratov.ru",
+          "domain:simbirsk.ru",
+          "domain:smolensk.ru",
+          "domain:tambov.ru",
+          "domain:tom.ru",
+          "domain:tomsk.ru",
+          "domain:tsaritsyn.ru",
+          "domain:tsk.ru",
+          "domain:tula.ru",
+          "domain:tver.ru",
+          "domain:tyumen.ru",
+          "domain:vladimir.ru",
+          "domain:vlg.ru",
+          "domain:volgograd.ru",
+          "domain:vologda.ru",
+          "domain:voronezh.ru",
+          "domain:vrn.ru",
+          "domain:vyatka.ru",
+          "domain:yaroslavl.ru",
+          "domain:yuzhno-sakhalinsk.ru",
+          "domain:chukotka.ru",
+          "domain:jamal.ru",
+          "domain:surgut.ru",
+          "domain:yamal.ru",
+          "domain:zdrav10.ru",
+          "domain:avito.ru",
+          "domain:avito.st",
+          "domain:ewisdom.us.kg",
+          "domain:o3.ru",
+          "domain:o3t.ru",
+          "domain:o3team.ru",
+          "domain:o-courier.ru",
+          "domain:ocourier.ru",
+          "domain:ozon-dostavka.ru",
+          "domain:ozon-credit.ru",
+          "domain:ozon-tech.ru",
+          "domain:ozon.by",
+          "domain:ozon.com",
+          "domain:ozon.com.by",
+          "domain:ozon.com.kz",
+          "domain:ozon.dev",
+          "domain:ozon.express",
+          "domain:ozon.kz",
+          "domain:ozon.li",
+          "domain:ozon.ru",
+          "domain:ozon.tech",
+          "domain:ozon.tm",
+          "domain:ozon.travel",
+          "domain:ozoncamp.pro",
+          "domain:ozoncard.ru",
+          "domain:ozoncom.by",
+          "domain:ozoncorporate.ru",
+          "domain:ozone.ru",
+          "domain:ozonglobalevents.com",
+          "domain:ozonpartners.by",
+          "domain:ozonpartners.ru",
+          "domain:ozonrocet.by",
+          "domain:ozonroket.by",
+          "domain:ozonru.co.il",
+          "domain:ozonru.com",
+          "domain:ozonru.eu",
+          "domain:ozonru.me",
+          "domain:ozonsport.ru",
+          "domain:ozonstatus.ru",
+          "domain:ozonusercontent.com",
+          "domain:rocketozon.by",
+          "domain:xn----8sbahiqzthbd0bn.xn--p1ai",
+          "domain:xn--80aafgovrgbc7am.xn--p1ai",
+          "domain:xn--e1adjldbbpv.xn--90ais",
+          "full:ad.ozone.ru",
+          "full:adv.ozon.ru",
+          "full:agency-adv.ozon.ru",
+          "full:analytics-adv.ozon.ru",
+          "full:beginners-adv.ozon.ru",
+          "full:google-analytics-suite.ozon.ru",
+          "full:loyalnost-adv.ozon.ru",
+          "full:new-adv.ozon.ru",
+          "full:prodvizhenie-adv.ozon.ru",
+          "full:questions-adv.ozon.ru",
+          "full:sentry.ozon.ru",
+          "full:xapi.ozon.by",
+          "full:xapi.ozon.com",
+          "full:xapi.ozon.com.by",
+          "full:xapi.ozon.com.kz",
+          "full:xapi.ozon.kz",
+          "full:xapi.ozon.ru",
+          "full:xapi.ozonru.me",
+          "domain:digital-wb.ru",
+          "domain:digitalwb.ru",
+          "domain:etradebook.ru",
+          "domain:geobasket.ru",
+          "domain:mp.world",
+          "domain:onlyjobs.ru",
+          "domain:paywb.com",
+          "domain:paywb.ru",
+          "domain:rwb.ru",
+          "domain:rwbautomation.ru",
+          "domain:rwbautomation.tech",
+          "domain:rwbgeo.ru",
+          "domain:russoutdoor.ru",
+          "domain:vamzakaz.ru",
+          "domain:vsemrabota.ru",
+          "domain:warehouse.domains",
+          "domain:wb-bank.ru",
+          "domain:wb-basket.ru",
+          "domain:wb-cloud.ru",
+          "domain:wb-sale.ru",
+          "domain:wb.am",
+          "domain:wb.kg",
+          "domain:wb.kz",
+          "domain:wb.ru",
+          "domain:wbautomation.ru",
+          "domain:wbautomation.tech",
+          "domain:wbbasket.ru",
+          "domain:wbdubna.ru",
+          "domain:wbkids.ru",
+          "domain:wbmail.ru",
+          "domain:wbmotivator.ru",
+          "domain:wbpay.ru",
+          "domain:wbr.by",
+          "domain:wbrep.ru",
+          "domain:wbstatic.net",
+          "domain:wbstatic.ru",
+          "domain:wbtek.ru",
+          "domain:wbwh.ru",
+          "domain:wbwh.tech",
+          "domain:wibes.com",
+          "domain:wibes.ru",
+          "domain:wildberries.am",
+          "domain:wildberries.by",
+          "domain:wildberries.co.il",
+          "domain:wildberries.es",
+          "domain:wildberries.eu",
+          "domain:wildberries.ge",
+          "domain:wildberries.kg",
+          "domain:wildberries.kz",
+          "domain:wildberries.lt",
+          "domain:wildberries.ru",
+          "domain:wildberries.tj",
+          "domain:wildberries.tm",
+          "domain:wildberries.uz",
+          "domain:xn--90ab.com",
+          "domain:velberis.ru",
+          "domain:vildberis.ru",
+          "domain:waildberies.ru",
+          "domain:waldberies.ru",
+          "domain:waldberis.ru",
+          "domain:walderis.ru",
+          "domain:wallberis.ru",
+          "domain:weildberries.ru",
+          "domain:welberris.ru",
+          "domain:weldberies.ru",
+          "domain:weldberres.ru",
+          "domain:weldberric.ru",
+          "domain:wellberies.ru",
+          "domain:wellberes.ru",
+          "domain:widberri.ru",
+          "domain:widberris.ru",
+          "domain:wieldberris.ru",
+          "domain:wilberes.ru",
+          "domain:wilberies.ru",
+          "domain:wilberris.ru",
+          "domain:wilberry.ru",
+          "domain:wildbaries.ru",
+          "domain:wildbarries.ru",
+          "domain:wildbeeries.ru",
+          "domain:wildberiss.ru",
+          "domain:wildberr.ru",
+          "domain:wildbiries.ru",
+          "domain:wildbirris.ru",
+          "domain:wildberdes.ru",
+          "domain:wildberriess.ru",
+          "domain:wildberrise.ru",
+          "domain:wildbress.ru",
+          "domain:wildbries.ru",
+          "domain:wildbrris.ru",
+          "domain:wildeberies.ru",
+          "domain:wildeberris.ru",
+          "domain:wiliberes.ru",
+          "domain:willberiess.ru",
+          "domain:willberis.ru",
+          "domain:wldberris.ru",
+          "domain:wolfberries.ru",
+          "domain:xn--80acbjgmges7ca.xn--p1ai",
+          "domain:xn--80acbjgsdq2cl.xn--p1ai",
+          "full:ads-gate.wildberries.ru",
+          "full:ads-media.wildberries.ru",
+          "full:ads.wildberries.ru",
+          "full:advert-api.wb.ru",
+          "full:advert-api-sandbox.wb.ru",
+          "full:advert-media-api.wb.ru",
+          "full:advert-api.wildberries.ru",
+          "full:advert-api-sandbox.wildberries.ru",
+          "full:advert-media-api.wildberries.ru",
+          "full:analytics-stage.wildberries.ru",
+          "full:analytics.wildberries.ru",
+          "full:marketing-info.wildberries.ru",
+          "full:marketplace-sentry.wb.ru",
+          "full:sentry.wb.ru",
+          "full:web-analytics.wildberries.ru",
+          "domain:alfabank.ru",
+          "domain:alfabank.st",
+          "domain:alfadirect.ru",
+          "domain:myapelsin.ru",
+          "domain:alfabank.oavdo.amc",
+          "domain:bcs.ru",
+          "domain:bcs-bank.ru",
+          "domain:broker.ru",
+          "domain:gazprombank.com",
+          "domain:gazprombank.investments",
+          "domain:gazprombank.ru",
+          "domain:gid.ru",
+          "domain:gpb.ru",
+          "domain:mkb.ru",
+          "domain:dbo-dengi.online",
+          "domain:mtsdengi.ru",
+          "domain:payment.ru",
+          "domain:psb-ocenka.ru",
+          "domain:psb.ru",
+          "domain:psbank.ru",
+          "domain:abr.ru",
+          "domain:rshb.ru",
+          "domain:2gis.ae",
+          "domain:2gis.am",
+          "domain:2gis.az",
+          "domain:2gis.by",
+          "domain:2gis.com",
+          "domain:2gis.com.cy",
+          "domain:2gis.cz",
+          "domain:2gis.ge",
+          "domain:2gis.kg",
+          "domain:2gis.kz",
+          "domain:2gis.ru",
+          "domain:2gis.tj",
+          "domain:2gis.uz",
+          "domain:2gis.tech",
+          "domain:okkoapi.tv",
+          "domain:playfamily.ru",
+          "domain:okko.sport",
+          "domain:okko.tv",
+          "domain:bps-sberbank.by",
+          "domain:sber-bank.by",
+          "domain:sber.ru",
+          "domain:sberbank.com",
+          "domain:sberbank.ru",
+          "domain:sbrf.ru",
+          "domain:ads.sber.ru",
+          "domain:clickstream.sberbank.ru",
+          "domain:neon.click",
+          "domain:sbermarketing.ru",
+          "full:error-tracking.megamarket.tech",
+          "full:metrics.21-school.ru",
+          "full:sentry.sberauto.com",
+          "full:tracing-http.megamarket.tech",
+          "full:visor.sberbank.ru",
+          "domain:id.ru",
+          "domain:megamarket.ru",
+          "domain:megamarket.tech",
+          "domain:sberauto.com",
+          "domain:sberbank-insurance.ru",
+          "domain:sbercloud.ru",
+          "domain:sbercloud.tech",
+          "domain:sberdevices.ru",
+          "domain:sberdisk.ru",
+          "domain:sberfactoring.ru",
+          "domain:sberindex.ru",
+          "domain:sberbankaktivno.ru",
+          "domain:sberbankins.ru",
+          "domain:sberhealth.ru",
+          "domain:sberleasing.ru",
+          "domain:sberlogistics.ru",
+          "domain:sbermegamarket.ru",
+          "domain:sbermobile.ru",
+          "domain:sberpb.ru",
+          "domain:sbertroika.ru",
+          "domain:afisha.ru",
+          "domain:citydrive.ru",
+          "domain:cloud.ru",
+          "domain:cloudru.cn",
+          "domain:eaptechka.online",
+          "domain:eapteka.ru",
+          "domain:21-school.ru",
+          "domain:kuper.ru",
+          "domain:restnproducts.ru",
+          "domain:samokat.ru",
+          "domain:giga.chat",
+          "domain:gitverse.ru",
+          "domain:jivo.chat",
+          "domain:jivo.ru",
+          "domain:jivochat.co.in",
+          "domain:jivochat.co.za",
+          "domain:jivochat.com",
+          "domain:jivochat.com.br",
+          "domain:jivochat.com.co",
+          "domain:jivochat.com.pe",
+          "domain:jivochat.com.tr",
+          "domain:jivochat.de",
+          "domain:jivochat.es",
+          "domain:jivochat.ng",
+          "domain:jivochat.ru",
+          "domain:jivosite.com",
+          "domain:jivosite.ru",
+          "domain:payecom.ru",
+          "domain:platiecom.ru",
+          "domain:otello.ru",
+          "domain:sber.pro",
+          "full:sberpro.vedomosti.ru",
+          "domain:cplsb.ru",
+          "domain:sberspasibo.ru",
+          "domain:spasibo.digital",
+          "domain:spasibo.market",
+          "domain:spasibobonus.ru",
+          "domain:spasibosb.ru",
+          "domain:spasibosberbank.ru",
+          "domain:accesspoint.uz",
+          "domain:getsynapse.io",
+          "domain:sbertech.ru",
+          "domain:zvuk-b2b.com",
+          "domain:zvuk.com",
+          "domain:xn----7sbhmncai5a0arm7c1e.xn--p1ai",
+          "domain:xn----8sbkfzespdwig.xn--p1ai",
+          "domain:xn----8sbwjbxyd.xn--p1ai",
+          "domain:xn--90aifd0azb.xn--p1acf",
+          "domain:2w.ru",
+          "domain:4c.ru",
+          "domain:4epenaxa.com",
+          "domain:atomyze.ru",
+          "domain:atomyze.tech",
+          "domain:babki.ru",
+          "domain:bankline.ru",
+          "domain:booking-tec.ru",
+          "domain:capitalt.ru",
+          "domain:cardsmobile.ru",
+          "domain:cdn-tinkoff.ru",
+          "domain:codeseason.by",
+          "domain:custody.ru",
+          "domain:data-tscbank.ru",
+          "domain:deltacredit.ru",
+          "domain:depository.ru",
+          "domain:dolyame.ru",
+          "domain:electronicsignature.ru",
+          "domain:enterly.ru",
+          "domain:era-invest.ru",
+          "domain:etna.ai",
+          "domain:gainstech.ru",
+          "domain:gosdolgi.ru",
+          "domain:it-katok.ru",
+          "domain:it-picnic.ru",
+          "domain:it-piknik.ru",
+          "domain:jfn.su",
+          "domain:jira-tcsbank.ru",
+          "domain:jump.taxi",
+          "domain:jumpwork.ru",
+          "domain:karmahelp.ru",
+          "domain:karta-banka-rf.ru",
+          "domain:koshelek.app",
+          "domain:lifestyle-tec.ru",
+          "domain:malotogo.ru",
+          "domain:max-tcs.ru",
+          "domain:mfk-t-finance.ru",
+          "domain:my-tbank.ru",
+          "domain:phoenix-ca.ru",
+          "domain:private-banking.ru",
+          "domain:rbcollect.ru",
+          "domain:rbcredit.ru",
+          "domain:rf-sim-mobile.ru",
+          "domain:rosbank-auto.ru",
+          "domain:rosbank-capital.ru",
+          "domain:rosbank-credit.com",
+          "domain:rosbank-dom.ru",
+          "domain:rosbank-leasing.ru",
+          "domain:rosbank.ru",
+          "domain:rusfinance.ru",
+          "domain:rusfinancebank.ru",
+          "domain:safeliner.tech",
+          "domain:sage-observability.tech",
+          "domain:sgcheck.ru",
+          "domain:t-access.ru",
+          "domain:t-bank-app.ru",
+          "domain:t-bank-app.su",
+          "domain:t-bank.by",
+          "domain:t-calls.ru",
+          "domain:t-capital-funds.ru",
+          "domain:t-cpa.ru",
+          "domain:t-dengi.ru",
+          "domain:t-finance.group",
+          "domain:t-finance.ru",
+          "domain:t-human.ru",
+          "domain:t-investlab.ru",
+          "domain:t-j.ru",
+          "domain:t-ofp.ru",
+          "domain:t-pulse.ru",
+          "domain:t-static.ru",
+          "domain:t-stekovka.ru",
+          "domain:t-tech.dev",
+          "domain:t-tech.ru",
+          "domain:t-tech.team",
+          "domain:t-technologies.ru",
+          "domain:t-tolk.ru",
+          "domain:t.finance",
+          "domain:tb-esim.ru",
+          "domain:tbank-online.com",
+          "domain:tbank.ru",
+          "domain:tconf.ru",
+          "domain:tcsbank.ru",
+          "domain:tdev.by",
+          "domain:time-messenger.ru",
+          "domain:tinkoff-group.com",
+          "domain:tinkoff.ai",
+          "domain:tinkoff.ru",
+          "domain:tinkoffcapital.ru",
+          "domain:tinkoffinsurance.ru",
+          "domain:tinkoffinsurancefuture.ru",
+          "domain:tinkoffjournal.ru",
+          "domain:tinkoffmobile.com",
+          "domain:tinsurance.ru",
+          "domain:tinsurancefuture.ru",
+          "domain:tmiaf.ru",
+          "domain:tpension.ru",
+          "domain:travel-tec.ru",
+          "domain:unidraw.io",
+          "domain:xn--90aifd0az.shop",
+          "domain:xn--b1aechhj6bof8g5a.site",
+          "domain:xn--d1abkf4ap.fun",
+          "domain:xn--h1ao.site",
+          "domain:centraluniversity.ru",
+          "domain:cu.ru",
+          "domain:prodcontest.com",
+          "domain:tinkoff-edu.ru",
+          "full:edu.tinkoff.ru",
+          "full:education.tbank.ru",
+          "domain:tochka-tech.com",
+          "domain:tochka.com",
+          "domain:pochtabank.ru",
+          "domain:vtb.ru",
+          "domain:beeline.ru",
+          "domain:dom.ru",
+          "domain:megafon.ru",
+          "domain:mts.ru",
+          "domain:mymts.ru",
+          "domain:rostelecom.ru",
+          "domain:rt.ru",
+          "domain:t2.ru",
+          "domain:tele2.ru",
+          "domain:yota.ru",
+          "domain:bitrix24.ru",
+          "domain:lamoda.ru",
+          "domain:lamoda.by",
+          "domain:lamoda.kz",
+          "domain:lamoda.uz",
+          "domain:lamoda.am",
+          "domain:ipapi.is",
+          "domain:iplocate.io",
+          "domain:ipinfo.io",
+          "domain:ip-api.com",
+          "domain:ip-api.io",
+          "domain:ipapi.co",
+          "domain:ipapi.com",
+          "domain:ipstack.com",
+          "domain:ipdata.co",
+          "domain:ipgeolocation.io",
+          "domain:ip2location.com",
+          "domain:maxmind.com",
+          "domain:ipify.org",
+          "domain:icanhazip.com",
+          "domain:ifconfig.me",
+          "domain:ifconfig.co",
+          "domain:ifconfig.io",
+          "domain:ident.me",
+          "domain:ipecho.net",
+          "domain:myip.com",
+          "domain:whatismyip.com",
+          "domain:whatismyipaddress.com",
+          "domain:ip.sb",
+          "domain:ip.me",
+          "domain:myexternalip.com",
+          "domain:ipwhois.io",
+          "domain:db-ip.com",
+          "domain:iplocation.net",
+          "domain:ipaddress.com",
+          "domain:ipleak.net",
+          "domain:dnsleaktest.com",
+          "domain:browserleaks.com",
+          "domain:whoer.net",
+          "domain:2ip.ru",
+          "domain:2ip.io",
+          "domain:jsonip.com",
+          "domain:reallyfreegeoip.org",
+          "domain:freegeoip.app",
+          "domain:freegeoip.net",
+          "domain:geoiplookup.net",
+          "domain:ipqualityscore.com",
+          "domain:vpnapi.io",
+          "domain:getipintel.net",
+          "domain:proxycheck.io",
+          "domain:fraudguard.io",
+          "domain:iphub.info",
+          "domain:ipregistry.co",
+          "domain:bigdatacloud.net",
+          "domain:bigdatacloud.com",
+          "domain:ipbase.com",
+          "domain:abstractapi.com",
+          "domain:ip-lookup.net",
+          "domain:geoip.com",
+          "domain:httpbin.org",
+          "domain:infobyip.com",
+          "domain:showmyip.com",
+          "domain:ipchicken.com",
+          "domain:iptest.net",
+          "domain:ipintel.net",
+          "domain:checkip.dyndns.org",
+          "domain:checkip.dyndns.com",
+          "domain:kamero.ai",
+          "domain:ipsonar.io",
+          "domain:ip-sonar.com"
+        ],
+        "outboundTag": "direct"
+      },
+      {
+        "balancerTag": "proxy-balancer",
+        "network": "tcp,udp",
+        "type": "field"
+      }
+    ]
+  }
+}
+
+vless://74d3057f-5d2b-4d21-8819-3b387d47c0a4@5.188.224.167:2083?mode=gun&security=reality&encryption=none&authority=&pbk=J6NuOlIq3ypdTFc1TMhDDKmF8BWPnNWZq1EkxD7K-lQ&fp=chrome&allowinsecure=0&type=grpc&serviceName=UpdateService&sni=ir.ozone.ru&sid=6da16b1335651b38#%F0%9F%87%B7%F0%9F%87%BA+LTE+%7C+EdgeCenter+%7C+%2362
+vless://6aeb78b3-d73c-44c8-b7f6-39bd5c1008a1@45.67.15.57:443?security=reality&encryption=none&pbk=kF3TSdUofDoKo1TqZcqY9dq1SoQ4iu_bQHAf2mVuWmk&headerType=none&fp=chrome&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=sw2.skywhirl.store&sid=549e6c3aae909b1c#%F0%9F%87%B8%F0%9F%87%AA+LTE+%7C+Hostup+%7C+%2399
