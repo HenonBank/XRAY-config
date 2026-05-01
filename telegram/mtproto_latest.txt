@@ -1,0 +1,8 @@
+tg://proxy?server=185.143.233.98&port=2086&secret=e9e437c2-1ee5-4f0d-ae09-4bfafc835e47
+https://t.me/proxy?server=swekitty2.grittytarantula.sbs&port=443&secret=ee3730ca5b692dc64af181a706bcc5cabc7377656b69747479322e677269747479746172616e74756c612e736273&&channel=@baicai_dev
+tg://proxy?server=91.99.228.195&port=443&secret=7gD_AA___wD_9VVf______VtZWRpYS5zdGVhbXBvd2VyZWQuY29t
+tg://proxy?server=164.90.237.85&port=80&secret=3V9HEDbXrf_pCKa76RM2stc
+tg://proxy?server=45.86.230.177&port=56777&secret=7gAA8A8Pd1VV____9QBuLmltZWRpYS5zdGVhbXBvd2VyZWQuY29t
+tg://proxy?server=pa.bus-reded.co.uk&port=443&secret=ee000000000000000000000000000000007777772e4869646550726f78692e696f
+https://t.me/proxy?server=90.188.4.105&port=7997&secret=ee4c670831e7ee84c7c3a287a2184181d8626979736b32322e7275
+tg://proxy?server=51.250.38.88&port=443&secret=ddc8d206c7720ee8d02b932e14a3714d88
