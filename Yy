@@ -1,0 +1,109 @@
+Понял, извиняюсь за недопонимание! У вас уже установлен Debian 11 с Proxmox на NanoPi R3S, и теперь нужно удалить Proxmox, оставив чистый Debian, чтобы потом установить графическую оболочку.
+
+Да, это полностью рабочая схема. Вот пошаговая инструкция:
+
+---
+
+Шаг 1: Остановите службы Proxmox
+
+```bash
+systemctl stop pve-cluster pvedaemon pveproxy
+systemctl disable pve-cluster pvedaemon pveproxy
+```
+
+Шаг 2: Удалите пакеты Proxmox
+
+```bash
+apt remove --purge proxmox-ve
+apt remove --purge pve-manager pve-qemu-kvm
+apt remove --purge lxc-pve lxcfs
+apt remove --purge qemu-server spiceterm
+apt remove --purge pve-container pve-ha-manager
+apt remove --purge corosync pacemaker
+apt remove --purge pve-firewall pve-cluster
+apt remove --purge pve-edk2-firmware
+```
+
+Важно: удалите все ядра Proxmox:
+
+```bash
+apt remove --purge pve-kernel-*
+```
+
+📌 Согласно официальному форуму Proxmox, удаление пакета proxmox-ve и связанных компонентов не повредит базовую Debian — система останется работоспособной .
+
+Шаг 3: Удалите репозиторий Proxmox
+
+```bash
+rm -f /etc/apt/sources.list.d/pve-enterprise.list
+rm -f /etc/apt/sources.list.d/pve-install-repo.list
+apt update
+```
+
+Шаг 4: Верните стандартное ядро Debian (ОЧЕНЬ ВАЖНО!)
+
+Без этого система продолжит загружать ядро Proxmox:
+
+```bash
+apt install linux-image-arm64   # для ARM64 (NanoPi R3S)
+update-grub
+```
+
+⚠️ Если на R3S используется U-Boot (а не GRUB), команда update-grub может не сработать. В этом случае просто убедитесь, что стандартное ядро установлено — загрузчик сам подхватит его при перезагрузке.
+
+Шаг 5: Почистите зависимости
+
+```bash
+apt autoremove --purge
+apt autoclean
+```
+
+Шаг 6: Перезагрузитесь
+
+```bash
+reboot
+```
+
+После перезагрузки проверьте, что Proxmox исчез:
+
+```bash
+systemctl status pve-cluster   # Должен быть "not found"
+uname -a                       # Должно показывать стандартное ядро Debian
+```
+
+Шаг 7: Установите графическую оболочку
+
+Теперь система — чистый Debian 11. Для NanoPi R3S с 2GB RAM подойдут лёгкие окружения:
+
+XFCE (рекомендуется):
+
+```bash
+apt install task-xfce-desktop lightdm
+```
+
+Или LXQt (ещё легче):
+
+```bash
+apt install task-lxqt-desktop lightdm
+```
+
+Установите менеджер входа и перезагрузитесь:
+
+```bash
+systemctl enable lightdm
+reboot
+```
+
+---
+
+Важные нюансы
+
+Проблема Решение
+ARM64 vs x86 NanoPi R3S — ARM64. Вся установка должна быть под эту архитектуру, пакеты для amd64 не подойдут.
+U-Boot вместо GRUB На некоторых ARM-платах может не быть GRUB. Убедитесь, что стандартное ядро установлено — загрузчик подхватит его автоматически .
+Ошибка "please-remove-proxmox-ve" Если apt ругается, создайте файл: touch /please-remove-proxmox-ve .
+Производительность 2GB ОЗУ + ARM → графика будет работать, но не ждите чудес. XFCE лучше, чем GNOME/KDE.
+
+---
+
+Если на каком-то шаге вылезет ошибка — пиши, разберёмся
