@@ -38,36 +38,31 @@ jobs:
     - name: Create sources.txt if not exists
       run: |
         if [ ! -f sources.txt ]; then
-          cat > sources.txt << 'EOF'
-# VLESS источники для парсинга
-https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt
-https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity
-https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/splitted/mix.txt
-https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/splitted/mix.txt
-EOF
+          echo "# VLESS источники для парсинга" > sources.txt
+          echo "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt" >> sources.txt
+          echo "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity" >> sources.txt
+          echo "https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/splitted/mix.txt" >> sources.txt
+          echo "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/splitted/mix.txt" >> sources.txt
           echo "✅ Создан sources.txt"
         fi
     
     - name: Create whitelist.txt if not exists
       run: |
         if [ ! -f whitelist.txt ]; then
-          cat > whitelist.txt << 'EOF'
-# Домены для белого списка
-vk.com
-yandex.ru
-mail.ru
-ok.ru
-ozon.ru
-wildberries.ru
-sberbank.ru
-tinkoff.ru
-EOF
+          echo "# Домены для белого списка" > whitelist.txt
+          echo "vk.com" >> whitelist.txt
+          echo "yandex.ru" >> whitelist.txt
+          echo "mail.ru" >> whitelist.txt
+          echo "ok.ru" >> whitelist.txt
+          echo "ozon.ru" >> whitelist.txt
+          echo "wildberries.ru" >> whitelist.txt
+          echo "sberbank.ru" >> whitelist.txt
+          echo "tinkoff.ru" >> whitelist.txt
           echo "✅ Создан whitelist.txt"
         fi
     
     - name: Run parser
-      run: |
-        python beta.py --once
+      run: python beta.py --once
     
     - name: Check results
       run: |
@@ -101,7 +96,7 @@ EOF
     
     - name: Create README with stats
       run: |
-        cat > CONFIGS_INFO.md << EOF
+        cat > CONFIGS_INFO.md << 'EOF'
 # VLESS Конфигурации
 
 ## 📊 Статистика
@@ -135,11 +130,7 @@ EOF
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        
-        # Добавляем все текстовые файлы
         git add url_work.txt url_encoded.txt url_named.txt url_filtered.txt url_clean.txt CONFIGS_INFO.md 2>/dev/null || true
-        
-        # Проверяем есть ли изменения
         if git diff --staged --quiet; then
           echo "📝 Нет изменений для коммита"
         else
