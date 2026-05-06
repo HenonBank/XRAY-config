@@ -11,30 +11,139 @@ jobs:
     
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
-        python-version: '3.10'
+        python-version: '3.11'
     
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install aiohttp aiofiles requests
     
+    - name: Download Xray
+      run: |
+        mkdir -p xray_bin
+        cd xray_bin
+        wget -q https://github.com/XTLS/Xray-core/releases/download/v1.8.23/Xray-linux-64.zip
+        unzip -q Xray-linux-64.zip
+        chmod +x xray
+        cd ..
+        echo "✅ Xray установлен"
+    
+    - name: Create sources.txt if not exists
+      run: |
+        if [ ! -f sources.txt ]; then
+          cat > sources.txt << 'EOF'
+# VLESS источники для парсинга
+https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt
+https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity
+https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/splitted/mix.txt
+https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/splitted/mix.txt
+EOF
+          echo "✅ Создан sources.txt"
+        fi
+    
+    - name: Create whitelist.txt if not exists
+      run: |
+        if [ ! -f whitelist.txt ]; then
+          cat > whitelist.txt << 'EOF'
+# Домены для белого списка
+vk.com
+yandex.ru
+mail.ru
+ok.ru
+ozon.ru
+wildberries.ru
+sberbank.ru
+tinkoff.ru
+EOF
+          echo "✅ Создан whitelist.txt"
+        fi
+    
     - name: Run parser
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         python beta.py --once
+    
+    - name: Check results
+      run: |
+        echo "=== РЕЗУЛЬТАТЫ ==="
+        if [ -f url_work.txt ]; then
+          COUNT=$(wc -l < url_work.txt)
+          echo "✅ Найдено рабочих конфигов: $COUNT"
+          echo "📊 Первые 5 конфигов:"
+          head -5 url_work.txt
+        else
+          echo "⚠️ Файл url_work.txt не создан"
+        fi
+        
+        if [ -f url_encoded.txt ]; then
+          TOTAL=$(wc -l < url_encoded.txt)
+          echo "📥 Всего обработано конфигов: $TOTAL"
+        fi
+    
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: vless-configs
+        path: |
+          url_work.txt
+          url_encoded.txt
+          url_named.txt
+          url_filtered.txt
+          url_clean.txt
+        retention-days: 7
+        if-no-files-found: warn
+    
+    - name: Create README with stats
+      run: |
+        cat > CONFIGS_INFO.md << EOF
+# VLESS Конфигурации
+
+## 📊 Статистика
+
+- **Дата обновления**: $(date '+%Y-%m-%d %H:%M:%S')
+- **Рабочих конфигов**: $(if [ -f url_work.txt ]; then wc -l < url_work.txt; else echo "0"; fi)
+- **Всего обработано**: $(if [ -f url_encoded.txt ]; then wc -l < url_encoded.txt; else echo "0"; fi)
+
+## 📁 Файлы
+
+- **url_work.txt** - Рабочие конфиги с проверкой (рекомендуется)
+- **url_encoded.txt** - Все конфиги после обработки
+- **url_named.txt** - Конфиги с названиями
+
+## 🔧 Использование
+
+Скопируйте содержимое `url_work.txt` и импортируйте в ваше приложение (V2Ray, Xray, Nekobox и т.д.)
+
+## ⚡ Параметры
+
+- Максимальный пинг: 2700ms
+- Проверка через Xray
+- Автообновление: каждый час
+
+---
+*Автоматически сгенерировано GitHub Actions*
+EOF
+        echo "✅ Создан CONFIGS_INFO.md"
     
     - name: Commit and push changes
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add *.txt *.md *.json
-        git diff --quiet && git diff --staged --quiet || git commit -m "Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')"
-        git push
+        
+        # Добавляем все текстовые файлы
+        git add url_work.txt url_encoded.txt url_named.txt url_filtered.txt url_clean.txt CONFIGS_INFO.md 2>/dev/null || true
+        
+        # Проверяем есть ли изменения
+        if git diff --staged --quiet; then
+          echo "📝 Нет изменений для коммита"
+        else
+          git commit -m "🔄 Автоматическое обновление конфигов - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+          echo "✅ Изменения запушены в репозиторий"
+        fi
