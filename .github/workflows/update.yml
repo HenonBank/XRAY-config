@@ -2,8 +2,8 @@ name: Автоматическое обновление конфигов
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Каждый час
-  workflow_dispatch:  # Ручной запуск
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   update:
@@ -35,29 +35,26 @@ jobs:
         cd ..
         echo "✅ Xray установлен"
     
-    - name: Create sources.txt if not exists
+    - name: Create config files
       run: |
+        # Создание sources.txt
         if [ ! -f sources.txt ]; then
-          echo "# VLESS источники для парсинга" > sources.txt
-          echo "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt" >> sources.txt
-          echo "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity" >> sources.txt
-          echo "https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/splitted/mix.txt" >> sources.txt
-          echo "https://raw.githubusercontent.com/mahdibland/ShadowsocksAggregator/master/sub/splitted/mix.txt" >> sources.txt
+          printf "%s\n" \
+            "# VLESS источники для парсинга" \
+            "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt" \
+            "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity" \
+            "https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/splitted/mix.txt" > sources.txt
           echo "✅ Создан sources.txt"
         fi
-    
-    - name: Create whitelist.txt if not exists
-      run: |
+        
+        # Создание whitelist.txt
         if [ ! -f whitelist.txt ]; then
-          echo "# Домены для белого списка" > whitelist.txt
-          echo "vk.com" >> whitelist.txt
-          echo "yandex.ru" >> whitelist.txt
-          echo "mail.ru" >> whitelist.txt
-          echo "ok.ru" >> whitelist.txt
-          echo "ozon.ru" >> whitelist.txt
-          echo "wildberries.ru" >> whitelist.txt
-          echo "sberbank.ru" >> whitelist.txt
-          echo "tinkoff.ru" >> whitelist.txt
+          printf "%s\n" \
+            "# Домены для белого списка" \
+            "vk.com" \
+            "yandex.ru" \
+            "mail.ru" \
+            "ok.ru" > whitelist.txt
           echo "✅ Создан whitelist.txt"
         fi
     
@@ -68,17 +65,8 @@ jobs:
       run: |
         echo "=== РЕЗУЛЬТАТЫ ==="
         if [ -f url_work.txt ]; then
-          COUNT=$(wc -l < url_work.txt)
+          COUNT=$(wc -l < url_work.txt 2>/dev/null || echo "0")
           echo "✅ Найдено рабочих конфигов: $COUNT"
-          echo "📊 Первые 5 конфигов:"
-          head -5 url_work.txt
-        else
-          echo "⚠️ Файл url_work.txt не создан"
-        fi
-        
-        if [ -f url_encoded.txt ]; then
-          TOTAL=$(wc -l < url_encoded.txt)
-          echo "📥 Всего обработано конфигов: $TOTAL"
         fi
     
     - name: Upload artifacts
@@ -89,18 +77,15 @@ jobs:
           url_work.txt
           url_encoded.txt
           url_named.txt
-          url_filtered.txt
-          url_clean.txt
         retention-days: 7
-        if-no-files-found: warn
     
-    - name: Create README with stats
+    - name: Commit and push
       run: |
-        cat > CONFIGS_INFO.md << 'EOF'
-# VLESS Конфигурации
-
-## 📊 Статистика
-
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add *.txt 2>/dev/null || true
+        git diff --staged --quiet || git commit -m "Update configs $(date '+%Y-%m-%d %H:%M:%S')"
+        git diff --staged --quiet || git push
 - **Дата обновления**: $(date '+%Y-%m-%d %H:%M:%S')
 - **Рабочих конфигов**: $(if [ -f url_work.txt ]; then wc -l < url_work.txt; else echo "0"; fi)
 - **Всего обработано**: $(if [ -f url_encoded.txt ]; then wc -l < url_encoded.txt; else echo "0"; fi)
