@@ -1,49 +1,61 @@
-name: Автоматическое обновление конфигов
+name: Прямой парсинг VLESS
 
 on:
-  schedule:
-    - cron: '0 * * * *'
   workflow_dispatch:
+  schedule:
+    - cron: '0 */2 * * *'
 
 jobs:
-  update:
+  parse:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout repository
+    - name: Checkout
       uses: actions/checkout@v4
     
-    - name: Setup Python
-      uses: actions/setup-python@v5
+    - name: Fetch and parse VLESS
+      run: |
+        cat > parser.py << 'EOF'
+        import re
+        import requests
+        
+        sources = [
+            "https://raw.githubusercontent.com/barry-far/V2ray-Configs/main/All_Configs_V2Ray.txt",
+            "https://raw.githubusercontent.com/alanbobs999/TopFreeProxies/master/Eternity",
+        ]
+        
+        vless_pattern = re.compile(r"vless://[^\s]+")
+        all_configs = set()
+        
+        for url in sources:
+            try:
+                resp = requests.get(url, timeout=30)
+                if resp.status_code == 200:
+                    configs = vless_pattern.findall(resp.text)
+                    all_configs.update(configs)
+                    print(f"✅ {url}: {len(configs)} configs")
+            except Exception as e:
+                print(f"❌ {url}: {e}")
+        
+        with open("url_work.txt", "w") as f:
+            for config in all_configs:
+                f.write(config + "\n")
+        
+        print(f"\n📊 Total unique VLESS configs: {len(all_configs)}")
+        EOF
+        
+        python3 parser.py
+    
+    - name: Upload results
+      uses: actions/upload-artifact@v4
       with:
-        python-version: '3.11'
+        name: vless-configs
+        path: url_work.txt
+        retention-days: 7
     
-    - name: Install dependencies
+    - name: Commit results
       run: |
-        pip install aiohttp aiofiles requests
-    
-    - name: List files (debug)
-      run: |
-        echo "=== Корень репозитория ==="
-        ls -la
-        echo "=== Папка script (если есть) ==="
-        ls -la script/ 2>/dev/null || echo "Папка script не существует"
-        echo "=== Все .py файлы ==="
-        find . -name "*.py" -type f
-    
-    - name: Run parser
-      run: |
-        # Пробуем разные пути
-        if [ -f "beta.py" ]; then
-          python beta.py
-        elif [ -f "script/beta.py" ]; then
-          python script/beta.py
-        elif [ -f "src/beta.py" ]; then
-          python src/beta.py
-        else
-          echo "❌ beta.py не найден!"
-          echo "📁 Содержимое репозитория:"
-          ls -la
-          find . -name "*.py"
-          exit 1
-        fi
+        git config user.name "GitHub Action"
+        git config user.email "action@github.com"
+        git add url_work.txt 2>/dev/null || true
+        git diff --staged --quiet || git commit -m "Update VLESS configs $(date '+%Y-%m-%d %H:%M:%S')"
+        git push
