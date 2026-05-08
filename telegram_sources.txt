@@ -1,0 +1,12 @@
+https://raw.githubusercontent.com/Argh94/Proxy-List/refs/heads/main/MTProto.txt
+https://raw.githubusercontent.com/Argh94/Proxy-List/refs/heads/main/SOCKS5.txt
+https://raw.githubusercontent.com/SoliSpirit/mtproto/refs/heads/master/all_proxies.txt
+https://raw.githubusercontent.com/ALIILAPRO/MTProtoProxy/main/mtproto.txt
+https://raw.githubusercontent.com/Firmfox/proxify/main/telegram_proxies/mtproto.txt
+https://raw.githubusercontent.com/Firmfox/proxify/main/telegram_proxies/socks5.txt
+https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt
+https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt
+https://cdn.jsdelivr.net/gh/proxifly/free-proxy-list@main/proxies/protocols/socks5/data.txt
+https://vakhov.github.io/fresh-proxy-list/socks5.txt
+https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/socks5.txt
+https://raw.githubusercontent.com/iplocate/free-proxy-list/refs/heads/main/all-proxies.txt
