@@ -1,1109 +1,1271 @@
-import asyncio
-import aiohttp
-import aiofiles
-import re
 import os
-import time
-import json
-import subprocess
-import tempfile
-import requests
-import threading
-import hashlib
-import socket
-import random
-import urllib.parse
-import ssl
 import sys
-import platform
-import argparse
-from datetime import datetime, timedelta
-from pathlib import Path
+import re
+import json
+import requests
+import zipfile
+from typing import List, Dict, Tuple, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
+import time
+import base64
+import asyncio
+import socket
+import ssl
+from collections import Counter
+from dataclasses import dataclass
+from pathlib import Path
+from urllib.parse import parse_qs, quote, unquote, urlparse
 
-# ========= ДИАГНОСТИКА =========
-print(f"🚀 Запуск парсера...")
-print(f"📂 Текущая директория: {os.getcwd()}")
-print(f"🐍 Python версия: {sys.version}")
-print(f"🖥️ Платформа: {platform.system()} {platform.machine()}")
-
-# ========= ФАЙЛЫ =========
-SOURCES_FILE = "sources.txt"
-OUTPUT_FILE = "url.txt"
-CLEAN_FILE = "url_clean.txt"
-FILTERED_FILE = "url_filtered.txt"
-NAMED_FILE = "url_named.txt"
-ENCODED_FILE = "url_encoded.txt"
-WORK_FILE = "url_work.txt"
-LOG_FILE = "log.txt"
-PROCESSED_FILE = "processed.json"
-CACHE_FILE = "cache_results.json"
-DEBUG_FILE = "debug_failed.txt"
-XRAY_LOG_FILE = "xray_errors.log"
-COUNTRY_CACHE_FILE = "country_cache.json"
-
-# ========= НАСТРОЙКИ =========
-THREADS_DOWNLOAD = 50
-CYCLE_DELAY = 3600
-LOG_CLEAN_INTERVAL = 86400
-CYCLES_BEFORE_DEBUG_CLEAN = 5
-
-XRAY_MAX_WORKERS = 10
-XRAY_TEST_URL = "https://www.gstatic.com/generate_204"
-XRAY_TIMEOUT = 5
-MAX_RETRIES = 2
-RETRY_DELAY = 1
-MAX_PING_MS = 2700  # МАКСИМАЛЬНЫЙ ПИНГ В МИЛЛИСЕКУНДАХ
-
-print(f"⚡ Настройки: XRAY_MAX_WORKERS={XRAY_MAX_WORKERS}, TIMEOUT={XRAY_TIMEOUT}, MAX_PING={MAX_PING_MS}ms")
-
-# ========= СЧЕТЧИК ЦИКЛОВ =========
-cycle_counter = 0
-
-# ========= РЕГУЛЯРКИ =========
-VLESS_REGEX = re.compile(r"vless://[^\s]+", re.IGNORECASE)
-UUID_REGEX = re.compile(
-    r"[0-9a-fA-F]{8}-"
-    r"[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{4}-"
-    r"[0-9a-fA-F]{12}"
+import aiofiles
+import aiohttp
+from loguru import logger
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    SpinnerColumn,
+    TaskProgressColumn,
+    TextColumn,
+    TimeElapsedColumn,
+    TimeRemainingColumn,
 )
+from rich.table import Table
 
-# ========= ПОЛНЫЙ СПИСОК ДОМЕНОВ (сокращенная версия для экономии места) =========
-DOMAIN_NAMES = {
-    # X5 Retail Group
-    'x5.ru': 'Пятёрочка',
-    '5ka.ru': 'Пятёрочка',
-    'perekrestok.ru': 'Перекрёсток',
-    'dixy.ru': 'Дикси',
-    
-    # VK
-    'vk.com': 'VK',
-    'vk.ru': 'VK',
-    'vkontakte.ru': 'VK',
-    'userapi.com': 'VK',
-    
-    # Яндекс
-    'yandex.ru': 'Яндекс',
-    'ya.ru': 'Яндекс',
-    'dzen.ru': 'Дзен',
-    'kinopoisk.ru': 'Кинопоиск',
-    'yastatic.net': 'Яндекс',
-    
-    # Mail.ru
-    'mail.ru': 'Mail.ru',
-    'bk.ru': 'Mail.ru',
-    'inbox.ru': 'Mail.ru',
-    'list.ru': 'Mail.ru',
-    
-    # Государственные
-    'gosuslugi.ru': 'Госуслуги',
-    'nalog.ru': 'ФНС',
-    'kremlin.ru': 'Кремль',
-    
-    # Соцсети
-    'ok.ru': 'Одноклассники',
-    'odnoklassniki.ru': 'Одноклассники',
-    
-    # Маркетплейсы
-    'ozon.ru': 'Ozon',
-    'wildberries.ru': 'Wildberries',
-    'wb.ru': 'Wildberries',
-    'avito.ru': 'Avito',
-    
-    # Банки
-    'sberbank.ru': 'Сбербанк',
-    'sber.ru': 'Сбербанк',
-    'tinkoff.ru': 'Тинькофф',
-    'tbank.ru': 'Тинькофф',
-    'vtb.ru': 'ВТБ',
-    'alfabank.ru': 'Альфа-Банк',
-    
-    # Телеком
-    'rostelecom.ru': 'Ростелеком',
-    'mts.ru': 'МТС',
-    'megafon.ru': 'Мегафон',
-    'beeline.ru': 'Билайн',
-    'tele2.ru': 'Tele2',
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
+OUTPUT_DIR = "tor_bridges"
+HISTORY_FILE = os.path.join(OUTPUT_DIR, "bridge_history.json")
+SOURCES_DIR = "sources"
+RECENT_HOURS = 72
+HISTORY_RETENTION_DAYS = 30
+MAX_WORKERS = 20
+DOWNLOAD_TIMEOUT = 15
+
+GITHUB_MIRROR_BASE = "https://raw.githubusercontent.com/Delta-Kronecker/Tor-Bridges-Collector/refs/heads/main/bridge"
+
+# GitHub Settings (DISABLED)
+GITHUB_TOKEN = "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"
+GITHUB_REPO = "HenonBank/XRAY-config"
+GITHUB_BRANCH = "main"
+GITHUB_TOR_FOLDER = "tor"
+
+# Gitea Settings
+GITEA_URL = "http://192.168.1.200:3002"
+GITEA_TOKEN = "e7ee3591eb617b7444f64bc86584a0ffd754f941"
+GITEA_REPO = "yarikpawe/Parser"
+GITEA_BRANCH = "main"
+GITEA_TOR_FOLDER = "tor"
+
+# Parser settings (for VLESS configs)
+PARSER_SOURCES_FILE = "sources.txt"
+PARSER_RAW_FILE = "url_raw.txt"
+PARSER_NAMED_FILE = "url_named.txt"
+PARSER_WORK_FILE = "url_work.txt"
+PARSER_DEAD_FILE = "url_dead.txt"
+PARSER_STATS_FILE = "stats.log"
+
+PARSER_CYCLE_SLEEP = 3600
+PARSER_DOWNLOAD_CONC = 60
+PARSER_CHECK_WORKERS = 40
+PARSER_TCP_TIMEOUT = 2.5
+PARSER_RETRY_COUNT = 3
+PARSER_RETRY_DELAY = 1.5
+
+# ============================================================================
+# BRIDGE FILES
+# ============================================================================
+
+BRIDGE_FILES = {
+    "obfs4.txt": f"{GITHUB_MIRROR_BASE}/obfs4.txt",
+    "obfs4_72h.txt": f"{GITHUB_MIRROR_BASE}/obfs4_72h.txt",
+    "obfs4_tested.txt": f"{GITHUB_MIRROR_BASE}/obfs4_tested.txt",
+    "obfs4_ipv6.txt": f"{GITHUB_MIRROR_BASE}/obfs4_ipv6.txt",
+    "obfs4_ipv6_72h.txt": f"{GITHUB_MIRROR_BASE}/obfs4_ipv6_72h.txt",
+    "obfs4_ipv6_tested.txt": f"{GITHUB_MIRROR_BASE}/obfs4_ipv6_tested.txt",
+    "webtunnel.txt": f"{GITHUB_MIRROR_BASE}/webtunnel.txt",
+    "webtunnel_72h.txt": f"{GITHUB_MIRROR_BASE}/webtunnel_72h.txt",
+    "webtunnel_tested.txt": f"{GITHUB_MIRROR_BASE}/webtunnel_tested.txt",
+    "webtunnel_ipv6.txt": f"{GITHUB_MIRROR_BASE}/webtunnel_ipv6.txt",
+    "webtunnel_ipv6_72h.txt": f"{GITHUB_MIRROR_BASE}/webtunnel_ipv6_72h.txt",
+    "webtunnel_ipv6_tested.txt": f"{GITHUB_MIRROR_BASE}/webtunnel_ipv6_tested.txt",
+    "vanilla.txt": f"{GITHUB_MIRROR_BASE}/vanilla.txt",
+    "vanilla_72h.txt": f"{GITHUB_MIRROR_BASE}/vanilla_72h.txt",
+    "vanilla_tested.txt": f"{GITHUB_MIRROR_BASE}/vanilla_tested.txt",
+    "vanilla_ipv6.txt": f"{GITHUB_MIRROR_BASE}/vanilla_ipv6.txt",
+    "vanilla_ipv6_72h.txt": f"{GITHUB_MIRROR_BASE}/vanilla_ipv6_72h.txt",
+    "vanilla_ipv6_tested.txt": f"{GITHUB_MIRROR_BASE}/vanilla_ipv6_tested.txt",
 }
 
-print(f"📋 Загружено {len(DOMAIN_NAMES)} доменов в словарь")
+EXTRA_SOURCES = {}
 
-# ========= ФУНКЦИИ ДЛЯ ОПРЕДЕЛЕНИЯ СТРАНЫ =========
-def get_country_flag(country_code: str) -> str:
-    if not country_code or len(country_code) != 2:
-        return "🏳️"
-    flag = ""
-    for char in country_code.upper():
-        flag += chr(ord(char) + 0x1F1E6 - ord('A'))
-    return flag
+# ============================================================================
+# VLESS PARSER COMPONENTS
+# ============================================================================
 
-def get_country_name(country_code: str) -> str:
-    country_names = {
-        'RU': 'Россия', 'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды',
-        'GB': 'Великобритания', 'FR': 'Франция', 'CA': 'Канада', 'JP': 'Япония',
-        'SG': 'Сингапур', 'HK': 'Гонконг', 'FI': 'Финляндия', 'SE': 'Швеция',
-        'NO': 'Норвегия', 'DK': 'Дания', 'PL': 'Польша', 'CZ': 'Чехия',
-    }
-    return country_names.get(country_code.upper(), country_code)
+console = Console()
 
-def save_country_cache(country_info: dict, host: str):
-    cache = {}
-    if os.path.exists(COUNTRY_CACHE_FILE):
-        try:
-            with open(COUNTRY_CACHE_FILE, 'r', encoding='utf-8') as f:
-                cache = json.load(f)
-        except:
-            pass
-    cache[host] = {
-        'country': country_info.get('country'),
-        'ip': country_info.get('ip'),
-        'city': country_info.get('city'),
-        'org': country_info.get('org'),
-        'timestamp': datetime.now().isoformat()
-    }
+LABELS: dict[str, str] = {
+    "sber.ru":             "Сбер",
+    "online.sberbank.ru":  "Сбер Онлайн",
+    "tbank.ru":            "Т-Банк",
+    "tinkoff.ru":          "Т-Банк",
+    "alfabank.ru":         "Альфа",
+    "vtb.ru":              "ВТБ",
+    "ozon.ru":             "Ozon",
+    "wildberries.ru":      "WB",
+    "wb.ru":               "WB",
+    "avito.ru":            "Avito",
+    "avito.st":            "Avito",
+    "vk.com":              "VK",
+    "vk.ru":               "VK",
+    "userapi.com":         "VK",
+    "yandex.ru":           "Яндекс",
+    "ya.ru":               "Яндекс",
+    "dzen.ru":             "Дзен",
+    "yastatic.net":        "Яндекс",
+    "gosuslugi.ru":        "Госуслуги",
+    "esia.gosuslugi.ru":   "Госуслуги",
+    "mts.ru":              "МТС",
+    "megafon.ru":          "МегаФон",
+    "beeline.ru":          "Билайн",
+    "tele2.ru":            "Tele2",
+    "rt.ru":               "Ростелеком",
+    "rutube.ru":           "Rutube",
+    "ivi.ru":              "Иви",
+    "okko.tv":             "Okko",
+    "fasssst.ru":          "Fasssst",
+    "tree-top.cc":         "TreeTop",
+    "maviks.ru":           "Maviks",
+    "connect-iskra.ru":    "Iskra",
+    "speedload.ru":        "Speedload",
+    "tcp-reset-club.net":  "TCP-Reset",
+}
+
+def get_label(host: str) -> str:
+    if not host:
+        return "Unknown"
+    h = host.lower().strip("[]")
+    if h in LABELS:
+        return LABELS[h]
+    parts = h.split(".")
+    for i in range(1, len(parts) + 1):
+        sub = ".".join(parts[-i:])
+        if sub in LABELS:
+            return LABELS[sub]
+    return parts[-2].capitalize() if len(parts) >= 2 else h.upper()
+
+@dataclass(slots=True)
+class Vless:
+    raw:     str
+    uuid:    str
+    host:    str
+    port:    int
+    params:  dict
+    remark:  str   = ""
+    latency: float = -1.0
+
+    @property
+    def sni(self) -> str:
+        return self.params.get("sni") or self.params.get("host") or self.host
+
+    @property
+    def proto(self) -> str:
+        t   = self.params.get("type", "tcp").lower()
+        sec = self.params.get("security", "").lower()
+        if sec == "reality":               return "reality"
+        if sec in ("tls", "xtls"):         return "tls"
+        if t in ("ws", "websocket"):       return "ws"
+        if t in ("grpc", "gun"):           return "grpc"
+        if t in ("httpupgrade", "xhttp"):  return "xhttp"
+        if t == "h2":                      return "h2"
+        return "tcp"
+
+    @property
+    def dedup_key(self) -> str:
+        return f"{self.uuid}@{self.host}:{self.port}"
+
+VLESS_PAT = re.compile(r"vless://[^\s#\"'<>]+", re.IGNORECASE)
+
+def _try_base64_decode(text: str) -> str:
+    stripped = text.strip()
+    if stripped.startswith("data:"):
+        stripped = stripped.split(",", 1)[-1]
     try:
-        with open(COUNTRY_CACHE_FILE, 'w', encoding='utf-8') as f:
-            json.dump(cache, f, indent=2, ensure_ascii=False)
-    except:
+        padded  = stripped + "=" * (-len(stripped) % 4)
+        decoded = base64.b64decode(padded).decode("utf-8", errors="ignore")
+        if "vless://" in decoded.lower():
+            return decoded
+    except Exception:
         pass
+    return text
 
-def check_tcp_connection(host: str, port: int, timeout: int = 2) -> bool:
-    try:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(timeout)
-        result = sock.connect_ex((host, port))
-        sock.close()
-        return result == 0
-    except:
-        return False
-
-def get_country_info_direct(host: str, port: int) -> dict:
-    country_info = {'ip': host, 'country': None, 'city': None, 'region': None, 'org': None, 'timezone': None, 'success': False}
-    try:
-        is_ip = re.match(r'^(\d{1,3}\.){3}\d{1,3}$', host) is not None
-        if is_ip:
-            target_ip = host
-        else:
-            try:
-                target_ip = socket.gethostbyname(host)
-                country_info['ip'] = target_ip
-            except:
-                target_ip = host
-        try:
-            import urllib.request
-            url = f"https://ipapi.co/{target_ip}/json/"
-            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=5) as response:
-                data = json.loads(response.read().decode())
-                if data.get('country_code'):
-                    country_info['country'] = data.get('country_code')
-                    country_info['success'] = True
-                    return country_info
-        except:
-            pass
-        try:
-            url = f"http://ip-api.com/json/{target_ip}?fields=status,countryCode,city,region,org,timezone"
-            with urllib.request.urlopen(url, timeout=5) as response:
-                data = json.loads(response.read().decode())
-                if data.get('status') == 'success' and data.get('countryCode'):
-                    country_info['country'] = data.get('countryCode')
-                    country_info['success'] = True
-                    return country_info
-        except:
-            pass
-    except:
-        pass
-    return country_info
-
-def get_country_info_fallback(host: str, port: int) -> dict:
-    country_info = get_country_info_direct(host, port)
-    if not country_info.get('country'):
-        if port == 443:
-            try:
-                context = ssl.create_default_context()
-                context.check_hostname = False
-                context.verify_mode = ssl.CERT_NONE
-                with socket.create_connection((host, port), timeout=5) as sock:
-                    with context.wrap_socket(sock, server_hostname=host) as ssock:
-                        cert = ssock.getpeercert()
-                        if cert and 'subject' in cert:
-                            for item in cert['subject']:
-                                for key, value in item:
-                                    if key == 'countryName':
-                                        country_info['country'] = value
-                                        country_info['success'] = True
-                                        return country_info
-            except:
-                pass
-    return country_info
-
-def parse_vless_host(url: str) -> str:
-    try:
-        if not url.startswith('vless://'):
-            return None
-        content = url[8:]
-        at_pos = content.find('@')
-        if at_pos == -1:
-            return None
-        after_at = content[at_pos+1:]
-        q_pos = after_at.find('?')
-        if q_pos != -1:
-            host_part = after_at[:q_pos]
-        else:
-            host_part = after_at
-        hash_pos = host_part.find('#')
-        if hash_pos != -1:
-            host_part = host_part[:hash_pos]
-        if ':' in host_part:
-            host = host_part.split(':', 1)[0]
-        else:
-            host = host_part
-        return host
-    except:
+def validate_sni(hostname: str) -> Optional[str]:
+    """Validate and clean SNI hostname, return None if invalid"""
+    if not hostname:
         return None
-
-# ========= ЛОГ =========
-async def log(message: str):
-    try:
-        now = datetime.now()
-        async with aiofiles.open(LOG_FILE, "a", encoding="utf-8") as f:
-            await f.write(f"[{now}] {message}\n")
-    except:
-        pass
-
-def log_xray_error(message: str):
-    try:
-        with open(XRAY_LOG_FILE, "a", encoding="utf-8") as f:
-            f.write(f"[{datetime.now().strftime('%H:%M:%S')}] {message}\n")
-    except:
-        pass
-
-# ========= ВАЛИДАЦИЯ =========
-def validate_vless(url: str) -> bool:
-    if not url.startswith("vless://"):
-        return False
-    if not UUID_REGEX.search(url):
-        return False
-    if "@" not in url:
-        return False
-    if ":" not in url:
-        return False
-    return True
-
-# ========= WHITELIST =========
-def load_whitelist_domains():
-    domains = set()
-    suffixes = []
-    if os.path.exists("whitelist.txt"):
+    cleaned = re.sub(r'[^\x20-\x7E]', '', hostname.strip())
+    if not cleaned or len(cleaned) > 255:
+        return None
+    if re.match(r'^[\w\.\-]+$', cleaned):
         try:
-            with open("whitelist.txt", "r", encoding="utf-8", errors="ignore") as f:
-                for line in f:
-                    d = line.strip().lower()
-                    if not d or d.startswith('#'):
-                        continue
-                    domains.add(d)
-                    suffixes.append("." + d)
-            print(f"📋 Загружено {len(domains)} доменов из whitelist.txt")
-        except:
-            print("⚠️ Ошибка загрузки whitelist.txt")
-    else:
-        print("⚠️ Файл whitelist.txt не найден, использую DOMAIN_NAMES")
-    return domains, suffixes
-
-# ========= ПРОТОКОЛ / SNI / НАЗВАНИЕ =========
-def detect_protocol(vless_url: str) -> str:
-    try:
-        no_scheme = vless_url[len("vless://"):]
-        after_at = no_scheme.split("@", 1)[1]
-        query = after_at.split("?", 1)[1] if "?" in after_at else ""
-        params = {}
-        for part in query.split("&"):
-            if "=" in part:
-                k, v = part.split("=", 1)
-                params[k.lower()] = v.lower()
-        transport = params.get("type", "").lower()
-        security = params.get("security", "").lower()
-        if transport in ("ws", "websocket"):
-            return "WS"
-        if transport in ("grpc", "gun"):
-            return "gRPC"
-        if transport in ("xhttp", "httpupgrade"):
-            return "XHTTP"
-        if transport in ("h2", "http2"):
-            return "H2"
-        if transport == "tcp":
-            return "TCP"
-        if security == "reality":
-            return "Reality"
-        if security in ("tls", "xtls"):
-            return "TLS"
-        return "TCP"
-    except:
-        return "Неизвестно"
-
-def extract_all_possible_domains(vless_url: str) -> list:
-    domains = set()
-    try:
-        if not vless_url.startswith("vless://"):
-            return []
-        content = vless_url[8:]
-        at_pos = content.find('@')
-        if at_pos == -1:
-            return []
-        after_at = content[at_pos+1:]
-        q_pos = after_at.find('?')
-        if q_pos != -1:
-            host_part = after_at[:q_pos]
-            query_part = after_at[q_pos+1:]
-        else:
-            host_part = after_at
-            query_part = ""
-        if ':' in host_part:
-            host = host_part.split(':', 1)[0]
-        else:
-            host = host_part
-        if host and '.' in host:
-            domains.add(host.lower())
-        if query_part:
-            if '#' in query_part:
-                query_part = query_part.split('#', 1)[0]
-            for param in query_part.split('&'):
-                if '=' in param:
-                    k, v = param.split('=', 1)
-                    try:
-                        v_decoded = urllib.parse.unquote(v).lower()
-                    except:
-                        v_decoded = v.lower()
-                    if k.lower() == 'sni' and '.' in v_decoded:
-                        domains.add(v_decoded)
-                    elif k.lower() == 'host' and '.' in v_decoded:
-                        domains.add(v_decoded)
-        return list(domains)
-    except Exception as e:
-        return []
-
-def get_human_name(domain: str) -> str:
-    if not domain:
-        return "Неизвестно"
-    d = domain.lower()
-    if d in DOMAIN_NAMES:
-        return DOMAIN_NAMES[d]
-    parts = d.split('.')
-    for i in range(len(parts) - 1):
-        sub = ".".join(parts[i:])
-        if sub in DOMAIN_NAMES:
-            return DOMAIN_NAMES[sub]
-    if len(parts) >= 2:
-        base = ".".join(parts[-2:])
-        if base in DOMAIN_NAMES:
-            return DOMAIN_NAMES[base]
-    return "Неизвестно"
-
-def filter_by_sni(vless_url: str, whitelist_domains: set, whitelist_suffixes: list) -> bool:
-    domains = extract_all_possible_domains(vless_url)
-    for domain in domains:
-        if domain in whitelist_domains:
-            return True
-        for suffix in whitelist_suffixes:
-            if domain.endswith(suffix):
-                return True
-        parts = domain.split('.')
-        if len(parts) >= 2:
-            base_domain = '.'.join(parts[-2:])
-            if base_domain in whitelist_domains:
-                return True
-    if not whitelist_domains:
-        for domain in domains:
-            if domain in DOMAIN_NAMES:
-                return True
-    return False
-
-# ========= СКАЧИВАНИЕ =========
-async def fetch(session, url, sem):
-    async with sem:
-        try:
-            print(f"📥 Скачиваю: {url[:80]}...")
-            async with session.get(url, timeout=15) as resp:
-                if resp.status == 200:
-                    return await resp.text()
-        except Exception as e:
-            await log(f"Ошибка при скачивании {url}: {e}")
+            cleaned.encode('idna')
+            return cleaned
+        except (UnicodeError, UnicodeEncodeError):
+            return None
+    ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+    if re.match(ip_pattern, cleaned):
+        return cleaned
+    if cleaned.startswith('[') and cleaned.endswith(']'):
+        return cleaned
     return None
 
-async def process_url(session, url, sem, output_lock, stats):
-    content = await fetch(session, url, sem)
-    stats["processed"] += 1
-    if not content:
-        return
-    matches = VLESS_REGEX.findall(content)
-    if matches:
-        async with output_lock:
-            async with aiofiles.open(OUTPUT_FILE, "a", encoding="utf-8") as f:
-                for m in matches:
-                    await f.write(m + "\n")
-        stats["found"] += len(matches)
-    print(f"📊 Обработано: {stats['processed']} | Найдено VLESS: {stats['found']}", end="\r")
-
-# ========= ОЧИСТКА =========
-async def clean_vless():
-    print("\n🧹 Очищаю дубликаты и проверяю валидность...")
-    if not os.path.exists(OUTPUT_FILE):
-        print("Нет файла url.txt — пропускаю очистку.")
-        return
-    try:
-        async with aiofiles.open(OUTPUT_FILE, "r", encoding="utf-8") as f:
-            lines = await f.readlines()
-    except:
-        print("Ошибка чтения файла")
-        return
-    unique = set()
-    valid = []
-    for line in lines:
-        url = line.strip()
-        if url and url not in unique and validate_vless(url):
-            unique.add(url)
-            valid.append(url)
-    async with aiofiles.open(CLEAN_FILE, "w", encoding="utf-8") as f:
-        for url in valid:
-            await f.write(url + "\n")
-    print(f"✅ Очистка завершена. Итоговых конфигов: {len(valid)}")
-
-# ========= ФИЛЬТРАЦИЯ =========
-async def filter_vless():
-    print("\n=== ФИЛЬТРАЦИЯ ПО WHITELIST ===")
-    if not os.path.exists(CLEAN_FILE):
-        print("Нет файла url_clean.txt — пропускаю фильтрацию.")
-        return
-    domains, suffixes = load_whitelist_domains()
-    try:
-        with open(CLEAN_FILE, "r", encoding="utf-8", errors="ignore") as f:
-            total = sum(1 for _ in f)
-    except:
-        total = 0
-    passed = 0
-    processed = 0
-    async with aiofiles.open(CLEAN_FILE, "r", encoding="utf-8") as f_in, \
-               aiofiles.open(FILTERED_FILE, "w", encoding="utf-8") as f_out:
-        async for line in f_in:
-            processed += 1
-            url = line.strip()
-            if not url:
-                continue
-            if filter_by_sni(url, domains, suffixes):
-                await f_out.write(url + "\n")
-                passed += 1
-            if processed % 100 == 0 and total > 0:
-                print(f"Фильтрация: {processed}/{total} | Подошло: {passed}", end="\r")
-    print(f"\n✅ Фильтрация завершена. Итог: {passed} конфигов.")
-
-# ========= ПЕРЕИМЕНОВАНИЕ =========
-async def rename_configs():
-    print("\n=== ПЕРЕИМЕНОВАНИЕ КОНФИГОВ ===")
-    if not os.path.exists(FILTERED_FILE):
-        print("Нет файла url_filtered.txt — пропускаю переименование.")
-        return
-    try:
-        with open(FILTERED_FILE, "r", encoding="utf-8", errors="ignore") as f:
-            total = sum(1 for _ in f)
-    except:
-        total = 0
-    processed = 0
-    async with aiofiles.open(FILTERED_FILE, "r", encoding="utf-8") as f_in, \
-               aiofiles.open(NAMED_FILE, "w", encoding="utf-8") as f_out:
-        async for line in f_in:
-            processed += 1
-            url = line.strip()
-            if not url:
-                continue
-            protocol = detect_protocol(url)
-            domains = extract_all_possible_domains(url)
-            human_name = "Неизвестно"
-            if domains:
-                for domain in domains:
-                    name = get_human_name(domain)
-                    if name != "Неизвестно":
-                        human_name = name
-                        break
-                if human_name == "Неизвестно" and domains:
-                    human_name = domains[0].split('.')[-2].capitalize() if len(domains[0].split('.')) >= 2 else domains[0]
-            title = f"{protocol}, {human_name} [#РКП]"
-            base = url.split("#", 1)[0]
-            new_url = f"{base}#{title}"
-            await f_out.write(new_url + "\n")
-            if processed % 500 == 0 and total > 0:
-                print(f"Переименовано: {processed}/{total}", end="\r")
-    print(f"\n✅ Переименование завершено. Итог: {processed} конфигов.")
-
-# ========= НОРМАЛИЗАЦИЯ URL =========
-def encode_vless_url(url: str) -> str:
-    try:
-        if not url.startswith("vless://"):
-            return url
-        content = url[8:]
-        at_pos = content.find('@')
-        if at_pos == -1:
-            return url
-        uuid = content[:at_pos]
-        after_at = content[at_pos+1:]
-        q_pos = after_at.find('?')
-        if q_pos != -1:
-            host_part = after_at[:q_pos]
-            params_part = after_at[q_pos+1:]
-        else:
-            host_part = after_at
-            params_part = ""
-        hash_pos = host_part.find('#')
-        if hash_pos != -1:
-            host_only = host_part[:hash_pos]
-            fragment = host_part[hash_pos+1:]
-        else:
-            host_only = host_part
-            fragment = ""
-        if not fragment and params_part:
-            hash_pos = params_part.find('#')
-            if hash_pos != -1:
-                params_only = params_part[:hash_pos]
-                fragment = params_part[hash_pos+1:]
-                params_part = params_only
-        return f"vless://{uuid}@{host_only}"
-    except Exception as e:
-        return url
-
-async def encode_all_configs():
-    print("\n=== КОДИРОВАНИЕ КОНФИГОВ ===")
-    if not os.path.exists(NAMED_FILE):
-        print("Нет файла url_named.txt — пропускаю кодирование.")
-        return
-    try:
-        with open(NAMED_FILE, 'r', encoding='utf-8') as f:
-            configs = [line.strip() for line in f if line.strip()]
-    except:
-        print("Ошибка чтения файла")
-        return
-    total = len(configs)
-    changed = 0
-    async with aiofiles.open(ENCODED_FILE, "w", encoding="utf-8") as f_out:
-        for i, url in enumerate(configs, 1):
-            encoded_url = encode_vless_url(url)
-            await f_out.write(encoded_url + "\n")
-            if encoded_url != url:
-                changed += 1
-            if i % 500 == 0:
-                print(f"Закодировано: {i}/{total} | Изменено: {changed}", end="\r")
-    print(f"\n✅ Кодирование завершено. Всего: {total}, изменено: {changed}")
-
-# ========= XRAY-ТЕСТЕР =========
-class SimpleProgress:
-    def __init__(self, total):
-        self.total = total
-        self.current = 0
-        self.start_time = time.time()
-        self.lock = threading.Lock()
-        self.working_count = 0
-        self.retry_count = 0
-        self.rejected_count = 0
-    
-    def update(self, status='', working=False, retry=False, rejected=False):
-        with self.lock:
-            self.current += 1
-            if working:
-                self.working_count += 1
-            if retry:
-                self.retry_count += 1
-            if rejected:
-                self.rejected_count += 1
-            if self.current % 10 == 0 or self.current == self.total:
-                elapsed = time.time() - self.start_time
-                speed = self.current / elapsed if elapsed > 0 else 0
-                print(f"\r📊 [{self.current}/{self.total}] ✅:{self.working_count} ❌:{self.rejected_count} 🔄:{self.retry_count} {speed:.1f} к/с {status}", end='', flush=True)
-    
-    def finish(self):
-        elapsed = time.time() - self.start_time
-        print(f"\n✅ Готово! {self.current} конфигов за {elapsed:.1f}с, рабочих: {self.working_count}, отклонено: {self.rejected_count}")
-
-class PortManager:
-    def __init__(self, start=20000, end=25000):
-        self.ports = list(range(start, end + 1))
-        self.used = set()
-        self.lock = threading.Lock()
-    
-    def get_port(self):
-        with self.lock:
-            available = [p for p in self.ports if p not in self.used]
-            if not available:
-                return None
-            port = random.choice(available)
-            self.used.add(port)
-            return port
-    
-    def release_port(self, port):
-        with self.lock:
-            self.used.discard(port)
-
-class XrayTester:
-    def __init__(self, input_file='url_encoded.txt', output_file='url_work.txt', max_workers=10, max_ping_ms=8000):
-        self.input_file = input_file
-        self.output_file = output_file
-        self.max_workers = max_workers
-        self.max_ping_ms = max_ping_ms
-        self.test_url = XRAY_TEST_URL
-        self.timeout = XRAY_TIMEOUT
-        self.max_retries = MAX_RETRIES
-        self.retry_delay = RETRY_DELAY
-        
-        if platform.system() == 'Windows':
-            self.xray_path = Path('./xray_bin/xray.exe')
-        else:
-            possible_paths = ['/usr/bin/xray', '/usr/local/bin/xray', './xray_bin/xray']
-            self.xray_path = None
-            for path in possible_paths:
-                if Path(path).exists():
-                    self.xray_path = Path(path)
-                    break
-            if not self.xray_path:
-                self.xray_path = Path('./xray_bin/xray')
-        
-        self.port_manager = PortManager()
-        self.debug_file = DEBUG_FILE
-        self.xray_log_file = XRAY_LOG_FILE
-        
-        self.country_cache = {}
-        if os.path.exists(COUNTRY_CACHE_FILE):
-            try:
-                with open(COUNTRY_CACHE_FILE, 'r', encoding='utf-8') as f:
-                    self.country_cache = json.load(f)
-                print(f"📋 Загружено {len(self.country_cache)} записей из кэша стран")
-            except:
-                pass
-        
-        self.saved_urls = set()
-        if os.path.exists(output_file):
-            try:
-                with open(output_file, 'r', encoding='utf-8') as f:
-                    for line in f:
-                        url = line.strip()
-                        if url:
-                            self.saved_urls.add(url)
-                print(f"📋 Загружено {len(self.saved_urls)} уже сохраненных конфигов")
-            except:
-                pass
-        
-        print(f"🔍 XrayTester инициализирован")
-        print(f"   ⚡ Потоков: {self.max_workers}")
-        print(f"   ⏱️ Максимальный пинг: {self.max_ping_ms}ms")
-        
-        self.xray_available = self.check_xray()
-    
-    def check_xray(self):
-        if not self.xray_path or not self.xray_path.exists():
-            print(f"⚠️ Xray не найден по пути: {self.xray_path}")
-            return False
-        try:
-            result = subprocess.run([str(self.xray_path), '-version'], 
-                                  capture_output=True, text=True, timeout=5)
-            version = result.stdout.split('\n')[0] if result.stdout else 'Unknown'
-            print(f"✅ Xray готов: {version}")
-            return True
-        except Exception as e:
-            print(f"⚠️ Ошибка Xray: {e}")
-            return False
-
-    def parse_vless_url(self, url):
-        try:
-            if not url.startswith('vless://'):
-                return None
-            content = url[8:]
-            at_pos = content.find('@')
-            if at_pos == -1:
-                return None
-            uuid = content[:at_pos]
-            after_at = content[at_pos+1:]
-            q_pos = after_at.find('?')
-            if q_pos != -1:
-                host_part = after_at[:q_pos]
-            else:
-                host_part = after_at
-            hash_pos = host_part.find('#')
-            if hash_pos != -1:
-                host_part = host_part[:hash_pos]
-            if ':' in host_part:
-                host, port_str = host_part.split(':', 1)
-                try:
-                    port = int(port_str)
-                except:
-                    port = 443
-            else:
-                host = host_part
-                port = 443
-            return {
-                'uuid': uuid,
-                'host': host,
-                'port': port,
-                'url': url
-            }
-        except Exception as e:
-            return None
-
-    def create_xray_config(self, parsed, port):
-        try:
-            config = {
-                "log": {"loglevel": "error"},
-                "inbounds": [{
-                    "port": port,
-                    "protocol": "socks",
-                    "settings": {"auth": "noauth", "udp": False},
-                    "tag": "socks-in"
-                }],
-                "outbounds": [{
-                    "protocol": "vless",
-                    "settings": {
-                        "vnext": [{
-                            "address": parsed['host'],
-                            "port": parsed['port'],
-                            "users": [{
-                                "id": parsed['uuid'],
-                                "encryption": "none"
-                            }]
-                        }]
-                    },
-                    "streamSettings": {
-                        "network": "tcp",
-                        "security": "none"
-                    },
-                    "tag": "proxy"
-                }]
-            }
-            return config
-        except Exception as e:
-            return None
-
-    def get_country_for_host(self, host, port):
-        if host in self.country_cache:
-            cached = self.country_cache[host]
-            if cached.get('country'):
-                return cached.get('country')
-        
-        country_info = get_country_info_fallback(host, port)
-        if country_info.get('country'):
-            country_code = country_info['country']
-            save_country_cache(country_info, host)
-            self.country_cache[host] = country_info
-            return country_code
+def parse_vless(line: str) -> Optional[Vless]:
+    line = line.strip()
+    if not line.lower().startswith("vless://"):
         return None
-
-    def add_country_flag_to_url(self, url, country_code, protocol, ping_ms, service_name=""):
-        try:
-            if '#' in url:
-                base = url.split("#", 1)[0]
-                existing_fragment = url.split("#", 1)[1]
-            else:
-                base = url
-                existing_fragment = ""
-            
-            if country_code:
-                flag = get_country_flag(country_code)
-                country_name = get_country_name(country_code)
-                new_fragment = f"{flag} {protocol}, {country_name} | {ping_ms:.0f}ms | {service_name} [#РКП]" if service_name else f"{flag} {protocol}, {country_name} | {ping_ms:.0f}ms [#РКП]"
-            else:
-                new_fragment = f"{protocol}, {service_name} | {ping_ms:.0f}ms [#РКП]" if service_name else f"{protocol} | {ping_ms:.0f}ms [#РКП]"
-            
-            return f"{base}#{new_fragment}"
-        except:
-            return url
-
-    def save_working_config(self, url, ping, country_code, protocol, service_name=""):
-        if ping > self.max_ping_ms:
-            return False
-        
-        final_url = self.add_country_flag_to_url(url, country_code, protocol, ping, service_name)
-        
-        if final_url in self.saved_urls:
-            return False
-        
-        try:
-            with open(self.output_file, 'a', encoding='utf-8') as f:
-                f.write(final_url + '\n')
-            self.saved_urls.add(final_url)
-            return True
-        except Exception as e:
-            return False
-
-    def test_with_xray(self, parsed, port, attempt=1):
-        if not self.xray_available:
-            return None
-        
-        config_file = None
-        process = None
-        
-        try:
-            config = self.create_xray_config(parsed, port)
-            if not config:
-                return None
-            
-            fd, config_file = tempfile.mkstemp(suffix='.json')
-            os.close(fd)
-            with open(config_file, 'w', encoding='utf-8') as f:
-                json.dump(config, f)
-            
-            if platform.system() == 'Windows':
-                creationflags = subprocess.CREATE_NO_WINDOW
-            else:
-                creationflags = 0
-                
-            process = subprocess.Popen(
-                [str(self.xray_path), '-c', config_file],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE,
-                text=True,
-                creationflags=creationflags
-            )
-            
-            time.sleep(1.0)
-            
-            if process.poll() is not None:
-                return "CRASH"
-            
-            start = time.time()
-            proxies = {'http': f'socks5://127.0.0.1:{port}', 'https': f'socks5://127.0.0.1:{port}'}
-            
-            try:
-                r = requests.get(self.test_url, proxies=proxies, timeout=self.timeout)
-                if r.status_code in [200, 204]:
-                    ping = (time.time() - start) * 1000
-                    return {'working': True, 'ping': ping, 'method': 'xray'}
-                else:
-                    return "FAIL"
-            except requests.exceptions.Timeout:
-                return "TIMEOUT"
-            except requests.exceptions.ConnectionError:
-                return "CONN_ERROR"
-            except Exception:
-                return "ERROR"
-            
-        except Exception as e:
-            return "EXCEPTION"
-        finally:
-            if process:
-                try: 
-                    process.terminate()
-                    time.sleep(0.2)
-                    if process.poll() is None:
-                        process.kill()
-                except: 
-                    pass
-            if config_file and os.path.exists(config_file):
-                try: 
-                    os.remove(config_file)
-                except: 
-                    pass
-
-    def test_one(self, url, progress=None):
-        parsed = self.parse_vless_url(url)
-        if not parsed:
-            if progress:
-                progress.update('❌ парсинг', working=False)
-            return None
-        
-        protocol = detect_protocol(url)
-        domains = extract_all_possible_domains(url)
-        service_name = "Неизвестно"
-        if domains:
-            for domain in domains:
-                name = get_human_name(domain)
-                if name != "Неизвестно":
-                    service_name = name
-                    break
-        
-        port = self.port_manager.get_port()
-        if port:
-            try:
-                for attempt in range(1, self.max_retries + 1):
-                    result = self.test_with_xray(parsed, port, attempt)
-                    
-                    if isinstance(result, dict) and result.get('working'):
-                        ping = result.get('ping', 0)
-                        
-                        if ping > self.max_ping_ms:
-                            if progress:
-                                progress.update('⏱️ пинг', working=False, rejected=True)
-                            self.port_manager.release_port(port)
-                            return None
-                        
-                        country_code = self.get_country_for_host(parsed['host'], parsed['port'])
-                        
-                        saved = self.save_working_config(url, ping, country_code, protocol, service_name)
-                        
-                        self.port_manager.release_port(port)
-                        if progress:
-                            progress.update('✅', working=True)
-                        return {'url': url, 'ping': ping, 'method': 'xray', 'country': country_code}
-                    
-                    elif result in ["TIMEOUT", "FAIL", "CONN_ERROR", "CRASH"]:
-                        if attempt < self.max_retries:
-                            time.sleep(self.retry_delay)
-                            continue
-                    
-                    else:
-                        break
-                
-                self.port_manager.release_port(port)
-            except:
-                self.port_manager.release_port(port)
-        
-        if progress:
-            progress.update('❌', working=False)
-        return None
-
-    def test_all(self):
-        if not os.path.exists(self.input_file):
-            print(f"\n❌ Нет файла {self.input_file}")
-            return
-        
-        try:
-            with open(self.input_file, 'r', encoding='utf-8') as f:
-                all_urls = [line.strip() for line in f if line.strip()]
-        except:
-            print(f"❌ Ошибка чтения файла {self.input_file}")
-            return
-        
-        if not all_urls:
-            print(f"\n📭 Нет конфигов для тестирования")
-            return
-        
-        print(f"\n{'='*60}")
-        print(f"🔍 Тестирование {len(all_urls)} конфигов")
-        print(f"⚡ Потоков: {self.max_workers}")
-        print(f"⏱️ Максимальный пинг: {self.max_ping_ms}ms")
-        print('='*60)
-        
-        working = []
-        progress = SimpleProgress(len(all_urls))
-        
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {executor.submit(self.test_one, url, progress): url for url in all_urls}
-            for future in as_completed(futures):
-                try:
-                    result = future.result(timeout=self.timeout + 5)
-                    if result:
-                        working.append(result)
-                except Exception as e:
-                    progress.update('⚠️', working=False)
-        
-        progress.finish()
-        
-        print(f"\n📊 Результаты:")
-        print(f"   ✅ Работает и добавлено: {len(working)}")
-        print(f"   📁 Всего сохранено: {len(self.saved_urls)} уникальных конфигов")
-        
-        return working
-
-    def run(self):
-        self.test_all()
-
-# ========= ОСНОВНОЙ ЦИКЛ =========
-async def main_cycle():
-    global cycle_counter
-    cycle_counter += 1
-    
-    print(f"\n{'='*60}")
-    print(f"=== ЦИКЛ #{cycle_counter} ===")
-    print(f"{'='*60}")
-    
-    # Очистка предыдущих результатов
-    for file in [OUTPUT_FILE, CLEAN_FILE, FILTERED_FILE, NAMED_FILE, ENCODED_FILE]:
-        if os.path.exists(file):
-            os.remove(file)
-            print(f"🧹 Удален {file}")
-    
-    if not os.path.exists(SOURCES_FILE):
-        print(f"❌ Нет файла {SOURCES_FILE}")
-        return
-    
     try:
-        with open(SOURCES_FILE, "r", encoding="utf-8", errors="ignore") as f:
-            urls = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-    except:
-        print(f"❌ Ошибка чтения {SOURCES_FILE}")
-        return
-    
-    if not urls:
-        print("⚠️ Нет URL для скачивания")
-        return
-    
-    print(f"📥 Загружаю {len(urls)} источников...")
-    
-    sem = asyncio.Semaphore(THREADS_DOWNLOAD)
-    output_lock = asyncio.Lock()
-    stats = {"processed": 0, "found": 0}
-    
-    async with aiohttp.ClientSession() as session:
-        tasks = [process_url(session, url, sem, output_lock, stats) for url in urls]
-        await asyncio.gather(*tasks)
-    
-    print(f"\n✅ Скачивание завершено. Найдено VLESS: {stats['found']}")
-    await log(f"Скачивание завершено. Найдено VLESS: {stats['found']}")
-    
-    if stats['found'] > 0:
-        await clean_vless()
-        await filter_vless()
-        await rename_configs()
-        await encode_all_configs()
-        
-        print("\n=== ЗАПУСК Xray ПРОВЕРКИ ===")
-        
-        tester = XrayTester(
-            input_file=ENCODED_FILE, 
-            output_file=WORK_FILE, 
-            max_workers=XRAY_MAX_WORKERS,
-            max_ping_ms=MAX_PING_MS
+        u = urlparse(line)
+        if "@" not in u.netloc:
+            return None
+
+        uuid_part, netloc_rest = u.netloc.split("@", 1)
+        netloc_rest = netloc_rest.split("#")[0]
+
+        if "?" in netloc_rest:
+            host_port, query_str = netloc_rest.split("?", 1)
+        else:
+            host_port, query_str = netloc_rest, u.query or ""
+
+        if host_port.startswith("["):
+            bracket_end = host_port.index("]")
+            host     = host_port[: bracket_end + 1]
+            port_str = host_port[bracket_end + 1:].lstrip(":")
+        elif ":" in host_port:
+            host, port_str = host_port.rsplit(":", 1)
+        else:
+            host, port_str = host_port, "443"
+
+        params: dict[str, str] = {}
+        if query_str:
+            for k, vs in parse_qs(query_str).items():
+                if vs:
+                    value = unquote(vs[0])
+                    if k in ("sni", "host"):
+                        value = re.sub(r'[^\x20-\x7E]', '', value.strip())
+                    params[k] = value
+
+        params = {k: v for k, v in params.items() if v}
+
+        remark = unquote(u.fragment) if u.fragment else ""
+
+        return Vless(
+            raw    = line,
+            uuid   = uuid_part,
+            host   = host,
+            port   = int(port_str),
+            params = params,
+            remark = remark,
         )
-        
-        loop = asyncio.get_event_loop()
-        await loop.run_in_executor(None, tester.run)
-        
-        if os.path.exists(WORK_FILE):
-            with open(WORK_FILE, 'r', encoding='utf-8') as f:
-                total_working = sum(1 for line in f if line.strip())
-            print(f"\n📊 ИТОГО РАБОЧИХ КОНФИГОВ: {total_working}")
-    else:
-        print("⏭️ Нет новых конфигов для обработки")
+    except Exception:
+        return None
 
-async def run_once():
-    """Однократный запуск для GitHub Actions"""
-    print("🚀 Запуск в режиме однократного выполнения")
-    await main_cycle()
+def normalize_url(v: Vless) -> str:
+    SAFE_KEYS = {"security", "type", "fp", "pbk", "sid", "flow", "spx", "mode"}
+    q_parts = [
+        f"{k}={v.params[k]}" if k in SAFE_KEYS else f"{k}={quote(v.params[k])}"
+        for k in sorted(v.params)
+    ]
+    base = f"vless://{v.uuid}@{v.host}:{v.port}"
+    if q_parts:
+        base += "?" + "&".join(q_parts)
+    if v.remark:
+        base += "#" + quote(v.remark, safe="/ ")
+    return base
 
-async def run_forever():
-    """Бесконечный цикл для локального запуска"""
-    print("\n🔄 Запуск бесконечного цикла...")
-    while True:
+async def fetch_with_retry(
+    session: aiohttp.ClientSession,
+    url: str,
+    sem: asyncio.Semaphore,
+    *,
+    retries: int = PARSER_RETRY_COUNT,
+) -> Optional[str]:
+    delay = PARSER_RETRY_DELAY
+    async with sem:
+        for attempt in range(1, retries + 1):
+            try:
+                async with session.get(url, ssl=False) as resp:
+                    if resp.status == 200:
+                        text = await resp.text(encoding="utf-8", errors="ignore")
+                        return _try_base64_decode(text)
+                    if 400 <= resp.status < 500:
+                        return None
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                pass
+            if attempt < retries:
+                await asyncio.sleep(delay)
+                delay *= 2
+    return None
+
+async def parser_download_phase(progress: Progress) -> int:
+    sources_file = Path(PARSER_SOURCES_FILE)
+    if not sources_file.is_file():
+        console.print(f"[red]{PARSER_SOURCES_FILE} не найден[/red]")
+        return 0
+
+    urls: list[str] = []
+    async with aiofiles.open(sources_file, encoding="utf-8") as f:
+        async for line in f:
+            line = line.strip()
+            if line and not line.startswith(("#", "//")):
+                urls.append(line)
+
+    if not urls:
+        return 0
+
+    task = progress.add_task(f"[cyan]Скачивание VLESS[/cyan] [dim]({len(urls)} источников)[/dim]", total=len(urls))
+    sem = asyncio.Semaphore(PARSER_DOWNLOAD_CONC)
+    timeout = aiohttp.ClientTimeout(total=15, connect=5)
+    links: set[str] = set()
+
+    async with aiohttp.ClientSession(timeout=timeout) as session:
+        tasks = [fetch_with_retry(session, u, sem) for u in urls]
+        for coro in asyncio.as_completed(tasks):
+            result = await coro
+            if isinstance(result, str):
+                links.update(VLESS_PAT.findall(result))
+            progress.advance(task)
+
+    if links:
+        async with aiofiles.open(PARSER_RAW_FILE, "w", encoding="utf-8") as f:
+            for ln in sorted(links):
+                await f.write(ln + "\n")
+
+    progress.remove_task(task)
+    logger.info(f"VLESS download: {len(links)} raw links")
+    return len(links)
+
+async def parser_clean_and_rename(progress: Progress) -> list[Vless]:
+    raw_file = Path(PARSER_RAW_FILE)
+    if not raw_file.is_file():
+        return []
+
+    task = progress.add_task("[cyan]Парсинг VLESS[/cyan]", total=None)
+
+    configs: list[Vless] = []
+    async with aiofiles.open(raw_file, encoding="utf-8") as f:
+        async for line in f:
+            v = parse_vless(line)
+            if v:
+                configs.append(v)
+
+    seen_keys: set[str] = set()
+    unique: list[Vless] = []
+    for v in configs:
+        k = v.dedup_key
+        if k not in seen_keys:
+            seen_keys.add(k)
+            unique.append(v)
+
+    for v in unique:
+        v.remark = f"{v.proto.upper()} • {get_label(v.sni)}"
+
+    if unique:
+        async with aiofiles.open(PARSER_NAMED_FILE, "w", encoding="utf-8") as f:
+            for v in unique:
+                await f.write(normalize_url(v) + "\n")
+
+    progress.remove_task(task)
+    logger.info(f"VLESS clean: {len(configs)} -> {len(unique)} unique")
+    return unique
+
+def tcp_check(v: Vless) -> float:
+    t0 = time.perf_counter()
+    try:
+        host = v.host.strip("[]")
+        with socket.create_connection((host, v.port), timeout=PARSER_TCP_TIMEOUT) as sock:
+            if v.proto in ("tls", "reality"):
+                ctx = ssl.create_default_context()
+                ctx.check_hostname = False
+                ctx.verify_mode = ssl.CERT_NONE
+                
+                sni = validate_sni(v.sni)
+                if sni is None:
+                    sni = validate_sni(v.host)
+                    if sni is None:
+                        return -1.0
+                
+                try:
+                    with ctx.wrap_socket(sock, server_hostname=sni) as tls_sock:
+                        tls_sock.do_handshake()
+                except ssl.SSLError as e:
+                    if "UNRECOGNIZED_NAME" in str(e):
+                        with ctx.wrap_socket(sock) as tls_sock:
+                            tls_sock.do_handshake()
+                    else:
+                        raise
+        return (time.perf_counter() - t0) * 1000
+    except (socket.timeout, ConnectionRefusedError, OSError, ssl.SSLError):
+        return -1.0
+
+async def parser_check_phase(
+    configs: list[Vless],
+    progress: Progress,
+) -> tuple[list[Vless], list[Vless]]:
+    if not configs:
+        return [], []
+
+    task = progress.add_task(f"[cyan]Проверка VLESS[/cyan] [dim]({len(configs)} конфигов)[/dim]", total=len(configs))
+    loop = asyncio.get_running_loop()
+    sem = asyncio.Semaphore(PARSER_CHECK_WORKERS)
+
+    async def _run(v: Vless) -> Vless:
+        async with sem:
+            v.latency = await loop.run_in_executor(None, tcp_check, v)
+            progress.advance(task)
+            return v
+
+    results = await asyncio.gather(*[_run(v) for v in configs])
+    progress.remove_task(task)
+
+    alive = sorted([v for v in results if v.latency >= 0], key=lambda x: x.latency)
+    dead = [v for v in results if v.latency < 0]
+
+    if alive:
+        async with aiofiles.open(PARSER_WORK_FILE, "w", encoding="utf-8") as f:
+            for v in alive:
+                await f.write(normalize_url(v) + "\n")
+    if dead:
+        async with aiofiles.open(PARSER_DEAD_FILE, "w", encoding="utf-8") as f:
+            for v in dead:
+                await f.write(normalize_url(v) + "\n")
+
+    logger.info(f"VLESS check: alive={len(alive)} dead={len(dead)}")
+    return alive, dead
+
+def parser_print_stats(alive: list[Vless], dead: list[Vless], elapsed: float) -> None:
+    total = len(alive) + len(dead)
+    pct_alive = (len(alive) / total * 100) if total else 0
+
+    summary = Table(box=box.ROUNDED, title="Результаты VLESS цикла", title_style="bold cyan")
+    summary.add_column("Метрика", style="bold")
+    summary.add_column("Значение", justify="right")
+
+    summary.add_row("Всего конфигов", f"[white]{total}[/white]")
+    summary.add_row("Живые", f"[green]{len(alive)}[/green]  ({pct_alive:.1f}%)")
+    summary.add_row("Мёртвые", f"[red]{len(dead)}[/red]")
+    if alive:
+        lats = [v.latency for v in alive]
+        summary.add_row("Лучший latency", f"[bold green]{min(lats):.0f} ms[/bold green]")
+        summary.add_row("Средний latency", f"[yellow]{sum(lats)/len(lats):.0f} ms[/yellow]")
+        summary.add_row("Худший latency", f"[red]{max(lats):.0f} ms[/red]")
+    summary.add_row("Время цикла", f"[dim]{elapsed:.1f}s[/dim]")
+    console.print(summary)
+
+    if alive:
+        top = Table(box=box.SIMPLE_HEAD, title="Топ-15 самых быстрых VLESS", title_style="bold green", show_lines=False)
+        top.add_column("#", width=4, justify="right", style="dim")
+        top.add_column("Latency", width=10, justify="right")
+        top.add_column("Протокол", width=10)
+        top.add_column("Метка", width=16)
+        top.add_column("Host", style="dim")
+
+        for i, v in enumerate(alive[:15], 1):
+            lat_color = "green" if v.latency < 300 else ("yellow" if v.latency < 700 else "red")
+            top.add_row(
+                str(i),
+                f"[{lat_color}]{v.latency:.0f} ms[/{lat_color}]",
+                f"[cyan]{v.proto.upper()}[/cyan]",
+                get_label(v.sni),
+                v.host,
+            )
+        console.print(top)
+
+    if alive:
+        proto_cnt = Counter(v.proto for v in alive)
+        pt = Table(box=box.SIMPLE, title="Протоколы VLESS (живые)", title_style="bold magenta")
+        pt.add_column("Протокол")
+        pt.add_column("Кол-во", justify="right")
+        pt.add_column("Доля", justify="right")
+        for proto, cnt in proto_cnt.most_common():
+            pt.add_row(
+                f"[cyan]{proto.upper()}[/cyan]",
+                str(cnt),
+                f"{cnt/len(alive)*100:.1f}%",
+            )
+        console.print(pt)
+
+def make_progress() -> Progress:
+    return Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(bar_width=36),
+        MofNCompleteColumn(),
+        TaskProgressColumn(),
+        TimeElapsedColumn(),
+        TimeRemainingColumn(),
+        console=console,
+        transient=True,
+    )
+
+async def run_vless_parser_one_cycle() -> Dict:
+    """Run one cycle of VLESS parser and return stats"""
+    ts = time.time()
+    
+    console.rule("[bold magenta] VLESS Parser Cycle [/bold magenta]", style="magenta")
+    
+    with make_progress() as progress:
+        await parser_download_phase(progress)
+        configs = await parser_clean_and_rename(progress)
+        alive, dead = await parser_check_phase(configs, progress)
+    
+    elapsed = time.time() - ts
+    parser_print_stats(alive, dead, elapsed)
+    
+    return {
+        "total": len(configs),
+        "alive": len(alive),
+        "dead": len(dead),
+        "elapsed": elapsed,
+        "alive_configs": alive
+    }
+
+# ============================================================================
+# GIT UPLOADER
+# ============================================================================
+
+class GitUploader:
+    def __init__(self):
+        self.github_session = requests.Session()
+        self.github_session.headers.update({
+            "Authorization": f"token {GITHUB_TOKEN}",
+            "Accept": "application/vnd.github.v3+json",
+            "User-Agent": "Tor-Bridges-Parser"
+        })
+        
+        self.gitea_session = requests.Session()
+        self.gitea_session.headers.update({
+            "Authorization": f"token {GITEA_TOKEN}",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        })
+    
+    def upload_to_github(self, filepath: str, filename: str) -> bool:
+        """Upload file to GitHub repository - DISABLED"""
+        return False
+    
+    def upload_to_gitea(self, filepath: str, filename: str, remote_folder: str = None) -> bool:
+        """Upload file to Gitea repository"""
         try:
-            cycle_start = time.time()
-            await main_cycle()
-            cycle_time = time.time() - cycle_start
-            print(f"✅ Цикл завершен за {cycle_time:.1f}с")
-            print(f"⏳ Ожидание {CYCLE_DELAY//3600} час до следующего цикла...")
-            await asyncio.sleep(CYCLE_DELAY)
-        except KeyboardInterrupt:
-            print("\n👋 Остановка по запросу пользователя")
-            break
-        except Exception as e:
-            print(f"\n❌ Ошибка в цикле: {e}")
-            await asyncio.sleep(60)
+            with open(filepath, 'r', encoding='utf-8') as f:
+                content = f.read()
+            
+            if remote_folder:
+                gitea_path = f"{remote_folder}/{filename}"
+            else:
+                gitea_path = f"{GITEA_TOR_FOLDER}/{filename}"
+            
+            url = f"{GITEA_URL}/api/v1/repos/{GITEA_REPO}/contents/{gitea_path}"
+            
+            sha = None
+            response = self.gitea_session.get(url)
+            if response.status_code == 200:
+                sha = response.json().get('sha')
+            
+            data = {
+                "content": content,
+                "message": f"Update Tor bridges: {filename}",
+                "branch": GITEA_BRANCH
+            }
+            
+            if sha:
+                data["sha"] = sha
+                response = self.gitea_session.put(url, json=data)
+            else:
+                response = self.gitea_session.post(url, json=data)
+            
+            if response.status_code in [200, 201]:
+                return True
+            else:
+                return self.upload_to_gitea_base64(filepath, filename, remote_folder)
+                
+        except Exception:
+            return self.upload_to_gitea_base64(filepath, filename, remote_folder)
+    
+    def upload_to_gitea_base64(self, filepath: str, filename: str, remote_folder: str = None) -> bool:
+        """Upload file to Gitea using base64 encoding"""
+        try:
+            with open(filepath, 'rb') as f:
+                content = f.read()
+            
+            encoded_content = base64.b64encode(content).decode('utf-8')
+            
+            if remote_folder:
+                gitea_path = f"{remote_folder}/{filename}"
+            else:
+                gitea_path = f"{GITEA_TOR_FOLDER}/{filename}"
+            
+            url = f"{GITEA_URL}/api/v1/repos/{GITEA_REPO}/contents/{gitea_path}"
+            
+            sha = None
+            response = self.gitea_session.get(url)
+            if response.status_code == 200:
+                sha = response.json().get('sha')
+            
+            data = {
+                "content": encoded_content,
+                "message": f"Update Tor bridges: {filename}",
+                "branch": GITEA_BRANCH,
+                "encoding": "base64"
+            }
+            
+            if sha:
+                data["sha"] = sha
+                response = self.gitea_session.put(url, json=data)
+            else:
+                response = self.gitea_session.post(url, json=data)
+            
+            return response.status_code in [200, 201]
+                
+        except Exception:
+            return False
+    
+    def upload_sources_folder_to_gitea(self, sources_path: str) -> Dict[str, bool]:
+        """Upload all files from sources folder to Gitea"""
+        results = {}
+        
+        if not os.path.exists(sources_path):
+            print(f"⚠️ Folder {sources_path} not found")
+            return results
+        
+        all_files = []
+        for root, dirs, files in os.walk(sources_path):
+            for file in files:
+                full_path = os.path.join(root, file)
+                rel_path = os.path.relpath(full_path, sources_path)
+                all_files.append((full_path, rel_path))
+        
+        if not all_files:
+            print(f"⚠️ No files found in {sources_path}")
+            return results
+        
+        print(f"\n📁 Uploading {len(all_files)} files from 'sources' folder to Gitea...")
+        print("-" * 60)
+        
+        success_count = 0
+        for i, (full_path, rel_path) in enumerate(all_files, 1):
+            rel_path_normalized = rel_path.replace('\\', '/')
+            print(f"   [{i:2d}/{len(all_files)}] {rel_path_normalized}...", end=' ')
+            
+            remote_folder = f"{GITEA_TOR_FOLDER}/sources"
+            dir_path = os.path.dirname(rel_path)
+            if dir_path:
+                dir_path_normalized = dir_path.replace('\\', '/')
+                remote_folder = f"{GITEA_TOR_FOLDER}/sources/{dir_path_normalized}"
+            
+            success = self.upload_to_gitea(full_path, os.path.basename(full_path), remote_folder)
+            results[rel_path] = success
+            
+            if success:
+                success_count += 1
+                print("✅")
+            else:
+                print("❌")
+        
+        print(f"\n📊 Sources folder upload summary: {success_count}/{len(all_files)} files uploaded")
+        return results
+    
+    def upload_vless_files_to_gitea(self) -> Dict[str, bool]:
+        """Upload VLESS parser result files to Gitea"""
+        results = {}
+        vless_files = [PARSER_RAW_FILE, PARSER_NAMED_FILE, PARSER_WORK_FILE, PARSER_DEAD_FILE]
+        
+        print("\n📤 Uploading VLESS parser files to Gitea...")
+        print("-" * 60)
+        
+        for filename in vless_files:
+            if os.path.exists(filename):
+                print(f"   {filename}...", end=' ')
+                success = self.upload_to_gitea(filename, filename, GITEA_TOR_FOLDER)
+                results[filename] = success
+                print("✅" if success else "❌")
+            else:
+                print(f"   {filename}... ⚠️ not found")
+                results[filename] = False
+        
+        return results
+    
+    def upload_all_files(self, folder_path: str) -> Dict[str, Dict[str, bool]]:
+        """Upload all tor bridge files to Gitea only"""
+        results = {"github": {}, "gitea": {}}
+        
+        if not os.path.exists(folder_path):
+            print(f"⚠️ Folder {folder_path} not found")
+            return results
+        
+        files = [f for f in os.listdir(folder_path) 
+                if f.endswith('.txt') and f != 'bridge_history.json']
+        
+        print(f"\n📤 Uploading {len(files)} files to Gitea only...")
+        print("=" * 60)
+        
+        print("\n🦋 Uploading to Gitea...")
+        gitea_success = 0
+        for i, filename in enumerate(files, 1):
+            filepath = os.path.join(folder_path, filename)
+            print(f"   [{i:2d}/{len(files)}] {filename}...", end=' ')
+            success = self.upload_to_gitea(filepath, filename)
+            results["gitea"][filename] = success
+            if success:
+                gitea_success += 1
+                print("✅")
+            else:
+                print("❌")
+        
+        print(f"\n📊 Upload Summary:")
+        print(f"   Gitea: {gitea_success}/{len(files)} files uploaded (GitHub disabled)")
+        
+        return results
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='VLESS парсер конфигов')
-    parser.add_argument('--once', action='store_true', help='Выполнить один цикл и завершить')
-    parser.add_argument('--forever', action='store_true', help='Запустить в бесконечном цикле')
+# ============================================================================
+# TOR BRIDGES PARSER
+# ============================================================================
+
+class TorBridgesParser:
+    def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update({
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/plain,text/html,application/xhtml+xml",
+            "Accept-Language": "en-US,en;q=0.9",
+        })
+        self.history = self._load_history()
+        self.git_uploader = GitUploader()
+        
+    def _load_history(self) -> Dict:
+        if os.path.exists(HISTORY_FILE):
+            try:
+                with open(HISTORY_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"⚠️ Ошибка загрузки истории: {e}")
+        return {}
+    
+    def _save_history(self):
+        try:
+            os.makedirs(OUTPUT_DIR, exist_ok=True)
+            with open(HISTORY_FILE, "w", encoding="utf-8") as f:
+                json.dump(self.history, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"⚠️ Ошибка сохранения истории: {e}")
+    
+    def _cleanup_history(self):
+        cutoff = datetime.now() - timedelta(days=HISTORY_RETENTION_DAYS)
+        old_count = len(self.history)
+        self.history = {
+            k: v for k, v in self.history.items()
+            if datetime.fromisoformat(v) > cutoff
+        }
+        removed = old_count - len(self.history)
+        if removed > 0:
+            print(f"   🗑️ Удалено {removed} старых записей из истории")
+    
+    def parse_bridge_line(self, line: str) -> Optional[Dict]:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            return None
+        
+        result = {
+            'transport': None,
+            'host': None,
+            'port': None,
+            'fingerprint': None,
+            'url': None,
+            'sni': None,
+            'version': None,
+            'is_ipv6': False,
+            'raw': line
+        }
+        
+        if line.startswith('obfs4'):
+            result['transport'] = 'obfs4'
+        elif line.startswith('webtunnel'):
+            result['transport'] = 'webtunnel'
+        elif line.startswith('vanilla'):
+            result['transport'] = 'vanilla'
+        else:
+            if 'webtunnel' in line.lower() or 'url=' in line:
+                result['transport'] = 'webtunnel'
+            elif 'obfs4' in line.lower():
+                result['transport'] = 'obfs4'
+            else:
+                result['transport'] = 'vanilla'
+        
+        ipv6_match = re.search(r'\[([0-9a-fA-F:]+)\]:(\d+)', line)
+        if ipv6_match:
+            result['host'] = ipv6_match.group(1)
+            result['port'] = int(ipv6_match.group(2))
+            result['is_ipv6'] = True
+        
+        if not result['host']:
+            ipv4_match = re.search(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)', line)
+            if ipv4_match:
+                result['host'] = ipv4_match.group(1)
+                result['port'] = int(ipv4_match.group(2))
+        
+        if not result['host']:
+            domain_match = re.search(r'([a-zA-Z0-9.-]+):(\d+)', line)
+            if domain_match:
+                result['host'] = domain_match.group(1)
+                result['port'] = int(domain_match.group(2))
+        
+        fp_match = re.search(r'([A-F0-9]{40})', line, re.IGNORECASE)
+        if fp_match:
+            result['fingerprint'] = fp_match.group(1).upper()
+        
+        url_match = re.search(r'url=([^\s]+)', line)
+        if url_match:
+            result['url'] = url_match.group(1)
+        
+        sni_match = re.search(r'sni-imitation=([^\s]+)', line)
+        if sni_match:
+            result['sni'] = sni_match.group(1)
+        
+        ver_match = re.search(r'ver=([0-9.]+)', line)
+        if ver_match:
+            result['version'] = ver_match.group(1)
+        
+        return result if result['host'] or result['fingerprint'] else None
+    
+    def download_bridge_file(self, filename: str, url: str) -> Tuple[str, List[str], bool]:
+        try:
+            print(f"   📥 Загрузка {filename}...", end=' ')
+            response = self.session.get(url, timeout=DOWNLOAD_TIMEOUT)
+            
+            if response.status_code == 200:
+                lines = []
+                new_bridges = 0
+                
+                for line in response.text.split('\n'):
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        lines.append(line)
+                        if line not in self.history:
+                            self.history[line] = datetime.now().isoformat()
+                            new_bridges += 1
+                
+                print(f"✅ {len(lines)} мостов (новых: {new_bridges})")
+                return filename, lines, True
+            else:
+                print(f"❌ HTTP {response.status_code}")
+                return filename, [], False
+                
+        except requests.exceptions.Timeout:
+            print(f"❌ Таймаут")
+            return filename, [], False
+        except Exception as e:
+            print(f"❌ Ошибка: {str(e)[:50]}")
+            return filename, [], False
+    
+    def download_all_bridges(self) -> Dict[str, List[str]]:
+        all_sources = {**BRIDGE_FILES, **EXTRA_SOURCES}
+        
+        print(f"\n🌐 Скачивание {len(all_sources)} файлов с мостами...")
+        print("-" * 60)
+        
+        results = {}
+        
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+            futures = {
+                executor.submit(self.download_bridge_file, name, url): name
+                for name, url in all_sources.items()
+            }
+            
+            for future in as_completed(futures):
+                name, lines, success = future.result()
+                if success:
+                    results[name] = lines
+        
+        return results
+    
+    def save_bridges(self, bridges: Dict[str, List[str]]):
+        os.makedirs(OUTPUT_DIR, exist_ok=True)
+        
+        for name, lines in bridges.items():
+            filepath = os.path.join(OUTPUT_DIR, name)
+            with open(filepath, 'w', encoding='utf-8') as f:
+                for line in lines:
+                    f.write(line + '\n')
+        
+        print(f"\n💾 Сохранено {len(bridges)} файлов в папку {OUTPUT_DIR}/")
+    
+    def create_zip_archive(self) -> Optional[str]:
+        zip_path = os.path.join(OUTPUT_DIR, "tor_bridges_complete.zip")
+        
+        if os.path.exists(zip_path):
+            os.remove(zip_path)
+        
+        try:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for filename in os.listdir(OUTPUT_DIR):
+                    if filename.endswith('.zip') or filename == "bridge_history.json":
+                        continue
+                    
+                    filepath = os.path.join(OUTPUT_DIR, filename)
+                    
+                    if '_tested' in filename:
+                        folder = "Tested"
+                    elif '_72h' in filename:
+                        folder = "Recent_72h"
+                    elif '_ipv6' in filename:
+                        folder = "IPv6"
+                    else:
+                        folder = "Full_Archive"
+                    
+                    arcname = os.path.join(folder, filename)
+                    zipf.write(filepath, arcname)
+            
+            size_kb = os.path.getsize(zip_path) / 1024
+            print(f"\n📦 Создан ZIP архив: {zip_path} ({size_kb:.1f} KB)")
+            return zip_path
+            
+        except Exception as e:
+            print(f"⚠️ Ошибка создания ZIP архива: {e}")
+            return None
+    
+    def analyze_bridges(self, bridges: Dict[str, List[str]]) -> Dict:
+        analysis = {
+            'obfs4': {'total': 0, 'tested': 0, 'recent': 0, 'ipv6': 0},
+            'webtunnel': {'total': 0, 'tested': 0, 'recent': 0, 'ipv6': 0},
+            'vanilla': {'total': 0, 'tested': 0, 'recent': 0, 'ipv6': 0},
+            'total_bridges': 0,
+            'unique_fingerprints': set(),
+            'unique_hosts': set()
+        }
+        
+        for name, lines in bridges.items():
+            count = len(lines)
+            
+            if 'obfs4' in name:
+                if name == 'obfs4.txt':
+                    analysis['obfs4']['total'] = count
+                elif 'tested' in name:
+                    analysis['obfs4']['tested'] = count
+                elif '72h' in name:
+                    analysis['obfs4']['recent'] = count
+                elif 'ipv6' in name:
+                    analysis['obfs4']['ipv6'] = count
+            
+            elif 'webtunnel' in name:
+                if name == 'webtunnel.txt':
+                    analysis['webtunnel']['total'] = count
+                elif 'tested' in name:
+                    analysis['webtunnel']['tested'] = count
+                elif '72h' in name:
+                    analysis['webtunnel']['recent'] = count
+                elif 'ipv6' in name:
+                    analysis['webtunnel']['ipv6'] = count
+            
+            elif 'vanilla' in name:
+                if name == 'vanilla.txt':
+                    analysis['vanilla']['total'] = count
+                elif 'tested' in name:
+                    analysis['vanilla']['tested'] = count
+                elif '72h' in name:
+                    analysis['vanilla']['recent'] = count
+                elif 'ipv6' in name:
+                    analysis['vanilla']['ipv6'] = count
+            
+            for line in lines:
+                parsed = self.parse_bridge_line(line)
+                if parsed:
+                    if parsed['fingerprint']:
+                        analysis['unique_fingerprints'].add(parsed['fingerprint'])
+                    if parsed['host']:
+                        analysis['unique_hosts'].add(parsed['host'])
+        
+        analysis['total_bridges'] = (
+            analysis['obfs4']['total'] + 
+            analysis['webtunnel']['total'] + 
+            analysis['vanilla']['total']
+        )
+        analysis['total_unique_fingerprints'] = len(analysis['unique_fingerprints'])
+        analysis['total_unique_hosts'] = len(analysis['unique_hosts'])
+        
+        return analysis
+    
+    def print_report(self, analysis: Dict) -> int:
+        print("\n" + "=" * 70)
+        print("📊 ОТЧЕТ О СОБРАННЫХ TOR МОСТАХ")
+        print("=" * 70)
+        
+        print(f"\n{'Тип':<12} {'Всего':>8} {'Проверено':>10} {'Свежие 72ч':>10} {'IPv6':>8}")
+        print("-" * 50)
+        
+        for t in ['obfs4', 'webtunnel', 'vanilla']:
+            data = analysis[t]
+            print(f"{t:<12} {data['total']:>8} {data['tested']:>10} {data['recent']:>10} {data['ipv6']:>8}")
+        
+        print("-" * 50)
+        
+        print(f"\n📈 ИТОГО:")
+        print(f"   Всего уникальных мостов: {analysis['total_bridges']}")
+        print(f"   Уникальных fingerprint'ов: {analysis['total_unique_fingerprints']}")
+        print(f"   Уникальных хостов: {analysis['total_unique_hosts']}")
+        
+        total_tested = analysis['obfs4']['tested'] + analysis['webtunnel']['tested'] + analysis['vanilla']['tested']
+        if analysis['total_bridges'] > 0:
+            working_percent = (total_tested / analysis['total_bridges']) * 100
+            print(f"   Процент проверенных: {working_percent:.1f}%")
+        
+        print("=" * 70)
+        
+        return total_tested
+    
+    def create_local_readme(self, analysis: Dict, total_tested: int):
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S UTC")
+        
+        readme_content = f"""# Tor Bridges Collection
+
+**Last update:** {timestamp}
+
+## Statistics
+
+| Type | Total | Tested | Recent (72h) | IPv6 |
+|------|-------|--------|--------------|------|
+| **obfs4** | {analysis['obfs4']['total']} | {analysis['obfs4']['tested']} | {analysis['obfs4']['recent']} | {analysis['obfs4']['ipv6']} |
+| **WebTunnel** | {analysis['webtunnel']['total']} | {analysis['webtunnel']['tested']} | {analysis['webtunnel']['recent']} | {analysis['webtunnel']['ipv6']} |
+| **Vanilla** | {analysis['vanilla']['total']} | {analysis['vanilla']['tested']} | {analysis['vanilla']['recent']} | {analysis['vanilla']['ipv6']} |
+
+**Total bridges:** {analysis['total_bridges']}
+**Tested working:** {total_tested}
+**Unique hosts:** {analysis['total_unique_hosts']}
+
+## Usage
+
+For Tor Browser:
+1. Open Tor Browser
+2. Go to Settings → Tor Bridges
+3. Select "Provide a bridge I know"
+4. Copy a bridge line from `*_tested.txt` files
+
+---
+Generated by Tor Bridges Parser
+"""
+        
+        readme_path = "README_TOR_BRIDGES.md"
+        with open(readme_path, 'w', encoding='utf-8') as f:
+            f.write(readme_content)
+        
+        print(f"\n📝 Created local README: {readme_path}")
+    
+    def cleanup_old_files(self):
+        if not os.path.exists(OUTPUT_DIR):
+            return
+        
+        for filename in os.listdir(OUTPUT_DIR):
+            if filename.endswith('.zip') and filename != "tor_bridges_complete.zip":
+                filepath = os.path.join(OUTPUT_DIR, filename)
+                try:
+                    os.remove(filepath)
+                except:
+                    pass
+    
+    def upload_sources_to_gitea(self):
+        """Upload entire sources folder to Gitea"""
+        print("\n" + "=" * 60)
+        print("📁 UPLOADING SOURCES FOLDER TO GITEA")
+        print("=" * 60)
+        
+        if os.path.exists(SOURCES_DIR):
+            results = self.git_uploader.upload_sources_folder_to_gitea(SOURCES_DIR)
+            success_count = sum(1 for v in results.values() if v)
+            print(f"\n✅ Sources uploaded: {success_count}/{len(results)} files")
+        else:
+            print(f"⚠️ Sources folder '{SOURCES_DIR}' not found, skipping...")
+            print(f"   Create '{SOURCES_DIR}' folder and add files to upload them to Gitea")
+    
+    def run_tor_bridges(self):
+        """Run only Tor bridges collection"""
+        print("=" * 70)
+        print("TOR BRIDGES PARSER - GitHub Mirror Version")
+        print("=" * 70)
+        print(f"Source: {GITHUB_MIRROR_BASE}")
+        print(f"Local output: {OUTPUT_DIR}/")
+        print("=" * 70)
+        
+        self._cleanup_history()
+        
+        bridges = self.download_all_bridges()
+        
+        if not bridges:
+            print("\n❌ Failed to download any bridge files!")
+            print("   Check internet connection or GitHub availability")
+            return
+        
+        self.save_bridges(bridges)
+        self._save_history()
+        
+        analysis = self.analyze_bridges(bridges)
+        total_tested = self.print_report(analysis)
+        self.create_local_readme(analysis, total_tested)
+        self.create_zip_archive()
+        
+        self.git_uploader.upload_all_files(OUTPUT_DIR)
+        
+        self.cleanup_old_files()
+        
+        print("\n" + "=" * 70)
+        print("✅ TOR BRIDGES COMPLETED!")
+        print("=" * 70)
+    
+    def run_full(self):
+        """Run both Tor bridges and VLESS parser"""
+        # Run Tor bridges collection
+        self.run_tor_bridges()
+        
+        # Run VLESS parser
+        print("\n" + "=" * 70)
+        print("🔄 STARTING VLESS PARSER")
+        print("=" * 70)
+        
+        try:
+            # Run one cycle of VLESS parser
+            vless_result = asyncio.run(run_vless_parser_one_cycle())
+            
+            # Upload VLESS results to Gitea
+            self.git_uploader.upload_vless_files_to_gitea()
+            
+            print(f"\n✅ VLESS Parser completed: {vless_result['alive']}/{vless_result['total']} alive")
+        except Exception as e:
+            print(f"⚠️ VLESS Parser error: {e}")
+            import traceback
+            traceback.print_exc()
+        
+        # Upload sources folder
+        self.upload_sources_to_gitea()
+        
+        print("\n" + "=" * 70)
+        print("✅ ALL PARSERS COMPLETED SUCCESSFULLY!")
+        print("=" * 70)
+
+# ============================================================================
+# MAIN
+# ============================================================================
+
+def test_parser():
+    print("=" * 70)
+    print("TEST MODE - Tor Bridges")
+    print("=" * 70)
+    
+    parser = TorBridgesParser()
+    
+    test_lines = [
+        "obfs4 192.95.36.142:443 C7B7B7B7B7B7B7B7B7B7B7B7B7B7B7B7B7B7B7B",
+        "webtunnel [2001:db8:1:1:1:1:1:1]:443 FINGERPRINT1234567890 url=https://example.com ver=0.0.3",
+        "vanilla 192.95.36.142:443"
+    ]
+    
+    print("\n📝 Parse test:")
+    for line in test_lines:
+        result = parser.parse_bridge_line(line)
+        if result:
+            print(f"  ✅ {line[:50]}... -> {result['transport']}: {result.get('host', 'N/A')}")
+        else:
+            print(f"  ❌ FAIL: {line[:50]}")
+    
+    print("\n🌐 Download test:")
+    filename, lines, success = parser.download_bridge_file("obfs4.txt", BRIDGE_FILES["obfs4.txt"])
+    
+    if success and lines:
+        print(f"  ✅ Downloaded {len(lines)} bridges")
+        if lines:
+            print(f"  First bridge: {lines[0][:100]}...")
+    else:
+        print("  ❌ Download failed")
+    
+    print("\n✅ Test completed")
+
+def test_vless_parser():
+    """Test VLESS parser only"""
+    print("=" * 70)
+    print("TEST MODE - VLESS Parser")
+    print("=" * 70)
+    
+    try:
+        result = asyncio.run(run_vless_parser_one_cycle())
+        print(f"\n✅ VLESS test completed: {result['alive']}/{result['total']} alive")
+    except Exception as e:
+        print(f"❌ VLESS test error: {e}")
+        import traceback
+        traceback.print_exc()
+
+def main():
+    import argparse
+    
+    global SOURCES_DIR, OUTPUT_DIR, MAX_WORKERS
+    
+    parser = argparse.ArgumentParser(description="Unified Parser - Tor Bridges + VLESS")
+    parser.add_argument("--test", action="store_true", help="Test Tor bridges parser")
+    parser.add_argument("--test-vless", action="store_true", help="Test VLESS parser")
+    parser.add_argument("--tor-only", action="store_true", help="Run only Tor bridges parser")
+    parser.add_argument("--vless-only", action="store_true", help="Run only VLESS parser")
+    parser.add_argument("--output", default=OUTPUT_DIR, help=f"Output folder (default: {OUTPUT_DIR})")
+    parser.add_argument("--workers", type=int, default=MAX_WORKERS, help=f"Threads (default: {MAX_WORKERS})")
+    parser.add_argument("--sources", default=SOURCES_DIR, help=f"Sources folder (default: {SOURCES_DIR})")
     
     args = parser.parse_args()
     
-    if args.once:
-        asyncio.run(run_once())
-    elif args.forever:
-        asyncio.run(run_forever())
+    SOURCES_DIR = args.sources
+    OUTPUT_DIR = args.output
+    MAX_WORKERS = args.workers
+    
+    if args.test:
+        test_parser()
+    elif args.test_vless:
+        test_vless_parser()
+    elif args.tor_only:
+        try:
+            collector = TorBridgesParser()
+            collector.run_tor_bridges()
+        except KeyboardInterrupt:
+            print("\n\n⏹️ Interrupted by user")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+    elif args.vless_only:
+        try:
+            result = asyncio.run(run_vless_parser_one_cycle())
+            uploader = GitUploader()
+            uploader.upload_vless_files_to_gitea()
+        except KeyboardInterrupt:
+            print("\n\n⏹️ Interrupted by user")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
     else:
-        # По умолчанию однократный запуск для GitHub Actions
-        asyncio.run(run_once())
+        try:
+            collector = TorBridgesParser()
+            collector.run_full()
+        except KeyboardInterrupt:
+            print("\n\n⏹️ Interrupted by user")
+            sys.exit(1)
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            import traceback
+            traceback.print_exc()
+            sys.exit(1)
+
+if __name__ == "__main__":
+    main()
