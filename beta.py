@@ -205,24 +205,86 @@ def _try_base64_decode(text: str) -> str:
         pass
     return text
 
+def validate_host(hostname: str) -> Optional[str]:
+    """Validate hostname for socket connection, return None if invalid"""
+    if not hostname:
+        return None
+    
+    hostname = hostname.strip()
+    if hostname.startswith('[') and hostname.endswith(']'):
+        hostname = hostname[1:-1]
+    
+    # Check IPv4
+    ipv4_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
+    if re.match(ipv4_pattern, hostname):
+        parts = hostname.split('.')
+        if all(0 <= int(p) <= 255 for p in parts):
+            return hostname
+        return None
+    
+    # Check IPv6
+    try:
+        socket.inet_pton(socket.AF_INET6, hostname)
+        return hostname
+    except (socket.error, OSError):
+        pass
+    
+    # Validate domain
+    if len(hostname) > 253:
+        return None
+    
+    labels = hostname.lower().split('.')
+    for label in labels:
+        if not label or len(label) > 63:
+            return None
+        if not re.match(r'^[a-z0-9]([a-z0-9-]*[a-z0-9])?$', label):
+            if not re.match(r'^[a-z0-9_]([a-z0-9_-]*[a-z0-9])?$', label):
+                return None
+    
+    try:
+        hostname.encode('idna')
+        return hostname.lower()
+    except (UnicodeError, UnicodeEncodeError):
+        return None
+
 def validate_sni(hostname: str) -> Optional[str]:
     """Validate and clean SNI hostname, return None if invalid"""
     if not hostname:
         return None
+    
     cleaned = re.sub(r'[^\x20-\x7E]', '', hostname.strip())
+    
     if not cleaned or len(cleaned) > 255:
         return None
+    
     if re.match(r'^[\w\.\-]+$', cleaned):
         try:
+            labels = cleaned.split('.')
+            for label in labels:
+                if not label or len(label) > 63:
+                    return None
             cleaned.encode('idna')
             return cleaned
         except (UnicodeError, UnicodeEncodeError):
             return None
+    
+    # IPv4
     ip_pattern = r'^(\d{1,3}\.){3}\d{1,3}$'
     if re.match(ip_pattern, cleaned):
-        return cleaned
+        parts = cleaned.split('.')
+        if all(0 <= int(p) <= 255 for p in parts):
+            return cleaned
+        return None
+    
+    # IPv6
     if cleaned.startswith('[') and cleaned.endswith(']'):
-        return cleaned
+        ipv6 = cleaned[1:-1]
+        try:
+            socket.inet_pton(socket.AF_INET6, ipv6)
+            return cleaned
+        except (socket.error, OSError):
+            return None
+    
     return None
 
 def parse_vless(line: str) -> Optional[Vless]:
@@ -251,6 +313,11 @@ def parse_vless(line: str) -> Optional[Vless]:
         else:
             host, port_str = host_port, "443"
 
+        # Validate host immediately
+        clean_host = validate_host(host.strip("[]"))
+        if clean_host is None:
+            return None
+
         params: dict[str, str] = {}
         if query_str:
             for k, vs in parse_qs(query_str).items():
@@ -258,6 +325,9 @@ def parse_vless(line: str) -> Optional[Vless]:
                     value = unquote(vs[0])
                     if k in ("sni", "host"):
                         value = re.sub(r'[^\x20-\x7E]', '', value.strip())
+                        # Validate SNI value
+                        if validate_sni(value) is None and k == "sni":
+                            continue  # Skip invalid SNI
                     params[k] = value
 
         params = {k: v for k, v in params.items() if v}
@@ -386,9 +456,14 @@ async def parser_clean_and_rename(progress: Progress) -> list[Vless]:
 
 def tcp_check(v: Vless) -> float:
     t0 = time.perf_counter()
+    
+    host = v.host.strip("[]")
+    valid_host = validate_host(host)
+    if valid_host is None:
+        return -1.0
+    
     try:
-        host = v.host.strip("[]")
-        with socket.create_connection((host, v.port), timeout=PARSER_TCP_TIMEOUT) as sock:
+        with socket.create_connection((valid_host, v.port), timeout=PARSER_TCP_TIMEOUT) as sock:
             if v.proto in ("tls", "reality"):
                 ctx = ssl.create_default_context()
                 ctx.check_hostname = False
@@ -398,7 +473,9 @@ def tcp_check(v: Vless) -> float:
                 if sni is None:
                     sni = validate_sni(v.host)
                     if sni is None:
-                        return -1.0
+                        with ctx.wrap_socket(sock) as tls_sock:
+                            tls_sock.do_handshake()
+                        return (time.perf_counter() - t0) * 1000
                 
                 try:
                     with ctx.wrap_socket(sock, server_hostname=sni) as tls_sock:
@@ -410,7 +487,7 @@ def tcp_check(v: Vless) -> float:
                     else:
                         raise
         return (time.perf_counter() - t0) * 1000
-    except (socket.timeout, ConnectionRefusedError, OSError, ssl.SSLError):
+    except (socket.timeout, ConnectionRefusedError, OSError, ssl.SSLError, UnicodeError):
         return -1.0
 
 async def parser_check_phase(
