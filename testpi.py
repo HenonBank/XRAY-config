@@ -1,1531 +1,2078 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Xray VPN Proxy Checker v2.0
-Тщательная проверка VLESS прокси ссылок на работоспособность
-Поддерживает: одиночные ссылки, файлы со ссылками, пакетную проверку
-Генерирует: JSON отчеты, HTML отчеты, статистику, мониторинг, TXT со списком рабочих прокси
-"""
-
 import asyncio
-import subprocess
-import json
+import aiohttp
+import aiofiles
 import re
 import os
-import tempfile
 import time
-import sys
-import argparse
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional, Any
-import urllib.parse
-import socket
-import ssl
-import hashlib
-import random
+import json
+import subprocess
+import tempfile
+import requests
 import threading
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import hashlib
+import socket
+import random
+import urllib.parse
+import ssl
+import sys
+import platform
+from datetime import datetime, timedelta
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# Цвета для вывода
-GREEN = '\033[92m'
-RED = '\033[91m'
-YELLOW = '\033[93m'
-BLUE = '\033[94m'
-CYAN = '\033[96m'
-WHITE = '\033[97m'
-RESET = '\033[0m'
-BOLD = '\033[1m'
+# ========= ДИАГНОСТИКА =========
+print(f"🚀 Запуск парсера...")
+print(f"📂 Текущая директория: {os.getcwd()}")
+print(f"🐍 Python версия: {sys.version}")
+print(f"🖥️ Платформа: {platform.system()} {platform.machine()}")
 
-class VlessProxyChecker:
-    """Проверка VLESS прокси с реальными тестами"""
+# ========= ФАЙЛЫ =========
+SOURCES_FILE = "sources.txt"
+OUTPUT_FILE = "url.txt"
+CLEAN_FILE = "url_clean.txt"
+FILTERED_FILE = "url_filtered.txt"
+NAMED_FILE = "url_named.txt"
+ENCODED_FILE = "url_encoded.txt"
+WORK_FILE = "url_work.txt"
+LOG_FILE = "log.txt"
+PROCESSED_FILE = "processed.json"
+CACHE_FILE = "cache_results.json"
+DEBUG_FILE = "debug_failed.txt"
+XRAY_LOG_FILE = "xray_errors.log"
+COUNTRY_CACHE_FILE = "country_cache.json"
+
+# ========= НАСТРОЙКИ =========
+THREADS_DOWNLOAD = 50
+CYCLE_DELAY = 3600
+LOG_CLEAN_INTERVAL = 86400
+CYCLES_BEFORE_DEBUG_CLEAN = 5
+
+XRAY_MAX_WORKERS = 10
+XRAY_TEST_URL = "https://www.gstatic.com/generate_204"
+XRAY_TIMEOUT = 5
+MAX_RETRIES = 2
+RETRY_DELAY = 1
+MAX_PING_MS = 2700  # МАКСИМАЛЬНЫЙ ПИНГ В МИЛЛИСЕКУНДАХ (2 секунд)
+
+print(f"⚡ Настройки: XRAY_MAX_WORKERS={XRAY_MAX_WORKERS}, TIMEOUT={XRAY_TIMEOUT}, MAX_PING={MAX_PING_MS}ms")
+
+# ========= СЧЕТЧИК ЦИКЛОВ =========
+cycle_counter = 0
+
+# ========= РЕГУЛЯРКИ =========
+VLESS_REGEX = re.compile(r"vless://[^\s]+", re.IGNORECASE)
+UUID_REGEX = re.compile(
+    r"[0-9a-fA-F]{8}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{4}-"
+    r"[0-9a-fA-F]{12}"
+)
+
+# ========= ПОЛНЫЙ СПИСОК ДОМЕНОВ =========
+DOMAIN_NAMES = {
+    # X5 Retail Group (Пятёрочка, Перекрёсток)
+    'x5.ru': 'Пятёрочка',
+    '5ka.ru': 'Пятёрочка',
+    '5ka-cdn.ru': 'Пятёрочка',
+    '5ka.static.ru': 'Пятёрочка',
+    'ads.x5.ru': 'Пятёрочка',
+    'perekrestok.ru': 'Перекрёсток',
+    'vprok.ru': 'Перекрёсток',
+    'dixy.ru': 'Дикси',
     
-    def __init__(self, verbose: bool = False, timeout: int = 10, max_workers: int = 3):
-        self.results = []
-        self.verbose = verbose
-        self.timeout = timeout
-        self.max_workers = max_workers
-        self.temp_dir = tempfile.mkdtemp(prefix="xray_check_")
-        self.xray_binary = self._find_xray()
-        self.test_urls = [
-            "https://www.google.com/generate_204",
-            "https://www.cloudflare.com/cdn-cgi/trace",
-            "https://www.youtube.com",
-            "https://www.github.com",
-            "https://telegram.org",
-            "https://www.microsoft.com",
-            "https://api.ipify.org",
-            "https://ipinfo.io/json",
-            "https://speed.cloudflare.com/__down?bytes=1000000"
-        ]
-        self.results_file = f"proxy_check_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        self.html_report = f"proxy_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.html"
-        self.working_txt = f"working_proxies_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        
-    def _find_xray(self) -> Optional[str]:
-        """Поиск Xray бинарника в системе"""
-        possible_paths = [
-            "/usr/local/bin/xray",
-            "/usr/bin/xray",
-            "./xray",
-            "xray",
-            "/opt/xray/xray",
-            "/tmp/xray",
-            os.path.expanduser("~/xray"),
-            "/overlay/upper/usr/bin/xray"  # Для OpenWrt/FriendlyWrt
-        ]
-        
-        for path in possible_paths:
-            try:
-                result = subprocess.run([path, "--version"], 
-                                      capture_output=True, 
-                                      text=True, 
-                                      timeout=2)
-                if result.returncode == 0:
-                    if self.verbose:
-                        print(f"{GREEN}✓ Xray найден: {path}{RESET}")
-                    return path
-            except:
-                continue
-        
-        print(f"{YELLOW}⚠ Xray не найден. Проверка будет ограничена (без реального прокси){RESET}")
-        print(f"{YELLOW}  Скачайте Xray: https://github.com/XTLS/Xray-core/releases{RESET}")
-        return None
+    # Fasssst и его поддомены
+    'fasssst.ru': 'Fasssst',
+    'rontgen.fasssst.ru': 'Fasssst',
+    'res.fasssst.ru': 'Fasssst',
+    'yt.fasssst.ru': 'Fasssst',
+    'fast.strelkavpn.ru': 'StrelkaVPN',
+    'strelkavpn.ru': 'StrelkaVPN',
     
-    def parse_vless_link(self, link: str) -> Optional[Dict]:
-        """Парсинг VLESS ссылки"""
+    # Maviks - торговая компания
+    'maviks.ru': 'Maviks',
+    'ru.maviks.ru': 'Maviks',
+    'a.ru.maviks.ru': 'Maviks',
+    
+    # Tree-top
+    'tree-top.cc': 'TreeTop',
+    'a.ru.tree-top.cc': 'TreeTop',
+    
+    # Connect-Iskra
+    'connect-iskra.ru': 'Iskra',
+    '212-wl.connect-iskra.ru': 'Iskra',
+    
+    # VK и связанные сервисы
+    'vk.com': 'VK',
+    'vk.ru': 'VK',
+    'vkontakte.ru': 'VK',
+    'userapi.com': 'VK',
+    'cdn.vk.com': 'VK',
+    'cdn.vk.ru': 'VK',
+    'id.vk.com': 'VK',
+    'id.vk.ru': 'VK',
+    'login.vk.com': 'VK',
+    'login.vk.ru': 'VK',
+    'api.vk.com': 'VK',
+    'api.vk.ru': 'VK',
+    'im.vk.com': 'VK',
+    'm.vk.com': 'VK',
+    'm.vk.ru': 'VK',
+    'sun6-22.userapi.com': 'VK',
+    'sun6-21.userapi.com': 'VK',
+    'sun6-20.userapi.com': 'VK',
+    'sun9-38.userapi.com': 'VK',
+    'sun9-101.userapi.com': 'VK',
+    'pptest.userapi.com': 'VK',
+    'vk-portal.net': 'VK',
+    'stats.vk-portal.net': 'VK',
+    'akashi.vk-portal.net': 'VK',
+    'vkvideo.ru': 'VK Видео',
+    'm.vkvideo.ru': 'VK Видео',
+    'queuev4.vk.com': 'VK',
+    'eh.vk.com': 'VK',
+    'cloud.vk.com': 'VK',
+    'cloud.vk.ru': 'VK',
+    'admin.cs7777.vk.ru': 'VK',
+    'admin.tau.vk.ru': 'VK',
+    'analytics.vk.ru': 'VK',
+    'api.cs7777.vk.ru': 'VK',
+    'api.tau.vk.ru': 'VK',
+    'away.cs7777.vk.ru': 'VK',
+    'away.tau.vk.ru': 'VK',
+    'business.vk.ru': 'VK',
+    'connect.cs7777.vk.ru': 'VK',
+    'cs7777.vk.ru': 'VK',
+    'dev.cs7777.vk.ru': 'VK',
+    'dev.tau.vk.ru': 'VK',
+    'expert.vk.ru': 'VK',
+    'id.cs7777.vk.ru': 'VK',
+    'id.tau.vk.ru': 'VK',
+    'login.cs7777.vk.ru': 'VK',
+    'login.tau.vk.ru': 'VK',
+    'm.cs7777.vk.ru': 'VK',
+    'm.tau.vk.ru': 'VK',
+    'm.vkvideo.cs7777.vk.ru': 'VK Видео',
+    'me.cs7777.vk.ru': 'VK',
+    'ms.cs7777.vk.ru': 'VK',
+    'music.vk.ru': 'VK Музыка',
+    'oauth.cs7777.vk.ru': 'VK',
+    'oauth.tau.vk.ru': 'VK',
+    'oauth2.cs7777.vk.ru': 'VK',
+    'ord.vk.ru': 'VK',
+    'push.vk.ru': 'VK',
+    'r.vk.ru': 'VK',
+    'target.vk.ru': 'VK',
+    'tech.vk.ru': 'VK',
+    'ui.cs7777.vk.ru': 'VK',
+    'ui.tau.vk.ru': 'VK',
+    'vkvideo.cs7777.vk.ru': 'VK Видео',
+    
+    # Speedload
+    'speedload.ru': 'Speedload',
+    'api.speedload.ru': 'Speedload',
+    'chat.speedload.ru': 'Speedload',
+    
+    # Serverstats
+    'serverstats.ru': 'ServerStats',
+    'cdnfive.serverstats.ru': 'ServerStats',
+    'cdncloudtwo.serverstats.ru': 'ServerStats',
+    
+    # Furypay
+    'furypay.ru': 'FuryPay',
+    'api.furypay.ru': 'FuryPay',
+    
+    # JoJack
+    'jojack.ru': 'JoJack',
+    'spb.jojack.ru': 'JoJack',
+    'at.jojack.ru': 'JoJack',
+    
+    # Tcp-reset-club
+    'tcp-reset-club.net': 'TCP Reset',
+    'est01-ss01.tcp-reset-club.net': 'TCP Reset',
+    'nl01-ss01.tcp-reset-club.net': 'TCP Reset',
+    'ru01-blh01.tcp-reset-club.net': 'TCP Reset',
+    
+    # Государственные
+    'gov.ru': 'Госуслуги',
+    'kremlin.ru': 'Кремль',
+    'government.ru': 'Правительство',
+    'duma.gov.ru': 'Госдума',
+    'genproc.gov.ru': 'Генпрокуратура',
+    'epp.genproc.gov.ru': 'Генпрокуратура',
+    'cikrf.ru': 'ЦИК',
+    'izbirkom.ru': 'Избирком',
+    'gosuslugi.ru': 'Госуслуги',
+    'sfd.gosuslugi.ru': 'Госуслуги',
+    'esia.gosuslugi.ru': 'Госуслуги',
+    'bot.gosuslugi.ru': 'Госуслуги',
+    'contract.gosuslugi.ru': 'Госуслуги',
+    'novorossiya.gosuslugi.ru': 'Госуслуги',
+    'pos.gosuslugi.ru': 'Госуслуги',
+    'lk.gosuslugi.ru': 'Госуслуги',
+    'map.gosuslugi.ru': 'Госуслуги',
+    'partners.gosuslugi.ru': 'Госуслуги',
+    'gosweb.gosuslugi.ru': 'Госуслуги',
+    'voter.gosuslugi.ru': 'Госуслуги',
+    'gu-st.ru': 'Госуслуги',
+    'nalog.ru': 'ФНС',
+    'pfr.gov.ru': 'ПФР',
+    'digital.gov.ru': 'Минцифры',
+    'adm.digital.gov.ru': 'Минцифры',
+    'xn--80ajghhoc2aj1c8b.xn--p1ai': 'Минцифры',
+    
+    # NSDI ресурсы
+    'a.res-nsdi.ru': 'NSDI',
+    'b.res-nsdi.ru': 'NSDI',
+    'a.auth-nsdi.ru': 'NSDI',
+    'b.auth-nsdi.ru': 'NSDI',
+    
+    # Одноклассники
+    'ok.ru': 'Одноклассники',
+    'odnoklassniki.ru': 'Одноклассники',
+    'cdn.ok.ru': 'Одноклассники',
+    'st.okcdn.ru': 'Одноклассники',
+    'st.ok.ru': 'Одноклассники',
+    'apiok.ru': 'Одноклассники',
+    'jira.apiok.ru': 'Одноклассники',
+    'api.ok.ru': 'Одноклассники',
+    'm.ok.ru': 'Одноклассники',
+    'live.ok.ru': 'Одноклассники',
+    'multitest.ok.ru': 'Одноклассники',
+    'dating.ok.ru': 'Одноклассники',
+    'tamtam.ok.ru': 'Одноклассники',
+    '742231.ms.ok.ru': 'Одноклассники',
+    
+    # Ozon
+    'ozon.ru': 'Ozon',
+    'www.ozon.ru': 'Ozon',
+    'seller.ozon.ru': 'Ozon',
+    'bank.ozon.ru': 'Ozon',
+    'pay.ozon.ru': 'Ozon',
+    'securepay.ozon.ru': 'Ozon',
+    'adv.ozon.ru': 'Ozon',
+    'invest.ozon.ru': 'Ozon',
+    'ord.ozon.ru': 'Ozon',
+    'autodiscover.ord.ozon.ru': 'Ozon',
+    'st.ozone.ru': 'Ozon',
+    'ir.ozone.ru': 'Ozon',
+    'vt-1.ozone.ru': 'Ozon',
+    'ir-2.ozone.ru': 'Ozon',
+    'xapi.ozon.ru': 'Ozon',
+    'owa.ozon.ru': 'Ozon',
+    'learning.ozon.ru': 'Ozon',
+    'mapi.learning.ozon.ru': 'Ozon',
+    'ws.seller.ozon.ru': 'Ozon',
+    
+    # Wildberries
+    'wildberries.ru': 'Wildberries',
+    'wb.ru': 'Wildberries',
+    'static.wb.ru': 'Wildberries',
+    'seller.wildberries.ru': 'Wildberries',
+    'banners.wildberries.ru': 'Wildberries',
+    'fw.wb.ru': 'Wildberries',
+    'finance.wb.ru': 'Wildberries',
+    'jitsi.wb.ru': 'Wildberries',
+    'dnd.wb.ru': 'Wildberries',
+    'user-geo-data.wildberries.ru': 'Wildberries',
+    'banners-website.wildberries.ru': 'Wildberries',
+    'chat-prod.wildberries.ru': 'Wildberries',
+    'a.wb.ru': 'Wildberries',
+    
+    # Avito
+    'avito.ru': 'Avito',
+    'm.avito.ru': 'Avito',
+    'api.avito.ru': 'Avito',
+    'avito.st': 'Avito',
+    'img.avito.st': 'Avito',
+    'sntr.avito.ru': 'Avito',
+    'stats.avito.ru': 'Avito',
+    'cs.avito.ru': 'Avito',
+    'www.avito.st': 'Avito',
+    'st.avito.ru': 'Avito',
+    'www.avito.ru': 'Avito',
+    
+    # Avito.st изображения (все 00-99)
+    **{f'{i:02d}.img.avito.st': 'Avito' for i in range(100)},
+    
+    # Банки
+    'sberbank.ru': 'Сбербанк',
+    'online.sberbank.ru': 'Сбербанк',
+    'sber.ru': 'Сбербанк',
+    'id.sber.ru': 'Сбербанк',
+    'bfds.sberbank.ru': 'Сбербанк',
+    'cms-res-web.online.sberbank.ru': 'Сбербанк',
+    'esa-res.online.sberbank.ru': 'Сбербанк',
+    'pl-res.online.sberbank.ru': 'Сбербанк',
+    'www.sberbank.ru': 'Сбербанк',
+    'vtb.ru': 'ВТБ',
+    'www.vtb.ru': 'ВТБ',
+    'online.vtb.ru': 'ВТБ',
+    'chat3.vtb.ru': 'ВТБ',
+    's.vtb.ru': 'ВТБ',
+    'sso-app4.vtb.ru': 'ВТБ',
+    'sso-app5.vtb.ru': 'ВТБ',
+    'gazprombank.ru': 'Газпромбанк',
+    'alfabank.ru': 'Альфа-Банк',
+    'metrics.alfabank.ru': 'Альфа-Банк',
+    'tinkoff.ru': 'Тинькофф',
+    'tbank.ru': 'Тинькофф',
+    'cdn.tbank.ru': 'Тинькофф',
+    'hrc.tbank.ru': 'Тинькофф',
+    'cobrowsing.tbank.ru': 'Тинькофф',
+    'le.tbank.ru': 'Тинькофф',
+    'id.tbank.ru': 'Тинькофф',
+    'imgproxy.cdn-tinkoff.ru': 'Тинькофф',
+    'banki.ru': 'Банки.ру',
+    
+    # Яндекс
+    'yandex.ru': 'Яндекс',
+    'ya.ru': 'Яндекс',
+    'dzen.ru': 'Дзен',
+    'kinopoisk.ru': 'Кинопоиск',
+    'yastatic.net': 'Яндекс',
+    'yandex.net': 'Яндекс',
+    'mail.yandex.ru': 'Яндекс Почта',
+    'disk.yandex.ru': 'Яндекс Диск',
+    'maps.yandex.ru': 'Яндекс Карты',
+    'api-maps.yandex.ru': 'Яндекс Карты',
+    'enterprise.api-maps.yandex.ru': 'Яндекс Карты',
+    'music.yandex.ru': 'Яндекс Музыка',
+    'yandex.by': 'Яндекс',
+    'yandex.com': 'Яндекс',
+    'travel.yandex.ru': 'Яндекс Путешествия',
+    'informer.yandex.ru': 'Яндекс',
+    'mediafeeds.yandex.ru': 'Яндекс',
+    'mediafeeds.yandex.com': 'Яндекс',
+    'uslugi.yandex.ru': 'Яндекс Услуги',
+    'kiks.yandex.ru': 'Яндекс',
+    'kiks.yandex.com': 'Яндекс',
+    'frontend.vh.yandex.ru': 'Яндекс',
+    'favicon.yandex.ru': 'Яндекс',
+    'favicon.yandex.com': 'Яндекс',
+    'favicon.yandex.net': 'Яндекс',
+    'browser.yandex.ru': 'Яндекс Браузер',
+    'browser.yandex.com': 'Яндекс Браузер',
+    'api.browser.yandex.ru': 'Яндекс Браузер',
+    'api.browser.yandex.com': 'Яндекс Браузер',
+    'wap.yandex.ru': 'Яндекс',
+    'wap.yandex.com': 'Яндекс',
+    '300.ya.ru': 'Яндекс',
+    'brontp-pre.yandex.ru': 'Яндекс',
+    'suggest.dzen.ru': 'Дзен',
+    'suggest.sso.dzen.ru': 'Дзен',
+    'sso.dzen.ru': 'Дзен',
+    'mail.yandex.com': 'Яндекс Почта',
+    'yabs.yandex.ru': 'Яндекс',
+    'neuro.translate.yandex.ru': 'Яндекс Перевод',
+    'cdn.yandex.ru': 'Яндекс',
+    'zen.yandex.ru': 'Дзен',
+    'zen.yandex.com': 'Дзен',
+    'zen.yandex.net': 'Дзен',
+    'collections.yandex.ru': 'Яндекс Коллекции',
+    'collections.yandex.com': 'Яндекс Коллекции',
+    'an.yandex.ru': 'Яндекс',
+    'sba.yandex.ru': 'Яндекс',
+    'sba.yandex.com': 'Яндекс',
+    'sba.yandex.net': 'Яндекс',
+    'surveys.yandex.ru': 'Яндекс Опросы',
+    'yabro-wbplugin.edadeal.yandex.ru': 'Яндекс',
+    'api.events.plus.yandex.net': 'Яндекс Плюс',
+    'speller.yandex.net': 'Яндекс Спеллер',
+    'avatars.mds.yandex.net': 'Яндекс',
+    'avatars.mds.yandex.com': 'Яндекс',
+    'mc.yandex.ru': 'Яндекс',
+    'mc.yandex.com': 'Яндекс',
+    '3475482542.mc.yandex.ru': 'Яндекс',
+    'zen-yabro-morda.mediascope.mc.yandex.ru': 'Яндекс',
+    
+    # Яндекс CDN и сервисы
+    'travel.yastatic.net': 'Яндекс',
+    'api.uxfeedback.yandex.net': 'Яндекс',
+    'api.s3.yandex.net': 'Яндекс',
+    'cdn.s3.yandex.net': 'Яндекс',
+    'uxfeedback-cdn.s3.yandex.net': 'Яндекс',
+    'uxfeedback.yandex.ru': 'Яндекс',
+    'cloudcdn-m9-15.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-14.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-13.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-12.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-10.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-9.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-7.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-6.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-5.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-4.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-3.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-m9-2.cdn.yandex.net': 'Яндекс',
+    'cloudcdn-ams19.cdn.yandex.net': 'Яндекс',
+    'http-check-headers.yandex.ru': 'Яндекс',
+    'cloud.cdn.yandex.net': 'Яндекс',
+    'cloud.cdn.yandex.com': 'Яндекс',
+    'cloud.cdn.yandex.ru': 'Яндекс',
+    'dr2.yandex.net': 'Яндекс',
+    'dr.yandex.net': 'Яндекс',
+    's3.yandex.net': 'Яндекс',
+    'static-mon.yandex.net': 'Яндекс',
+    'sync.browser.yandex.net': 'Яндекс',
+    'storage.ape.yandex.net': 'Яндекс',
+    'strm-rad-23.strm.yandex.net': 'Яндекс',
+    'strm.yandex.net': 'Яндекс',
+    'strm.yandex.ru': 'Яндекс',
+    'log.strm.yandex.ru': 'Яндекс',
+    'egress.yandex.net': 'Яндекс',
+    'cdnrhkgfkkpupuotntfj.svc.cdn.yandex.net': 'Яндекс',
+    'csp.yandex.net': 'Яндекс',
+    
+    # Mail.ru Group (полный список)
+    'mail.ru': 'Mail.ru',
+    'e.mail.ru': 'Mail.ru',
+    'my.mail.ru': 'Mail.ru',
+    'cloud.mail.ru': 'Mail.ru',
+    'inbox.ru': 'Mail.ru',
+    'list.ru': 'Mail.ru',
+    'bk.ru': 'Mail.ru',
+    'myteam.mail.ru': 'Mail.ru',
+    'trk.mail.ru': 'Mail.ru',
+    '1l-api.mail.ru': 'Mail.ru',
+    '1l.mail.ru': 'Mail.ru',
+    '1l-s2s.mail.ru': 'Mail.ru',
+    '1l-view.mail.ru': 'Mail.ru',
+    '1link.mail.ru': 'Mail.ru',
+    '1l-hit.mail.ru': 'Mail.ru',
+    '2021.mail.ru': 'Mail.ru',
+    '2018.mail.ru': 'Mail.ru',
+    '23feb.mail.ru': 'Mail.ru',
+    '2019.mail.ru': 'Mail.ru',
+    '2020.mail.ru': 'Mail.ru',
+    '1l-go.mail.ru': 'Mail.ru',
+    '8mar.mail.ru': 'Mail.ru',
+    '9may.mail.ru': 'Mail.ru',
+    'aa.mail.ru': 'Mail.ru',
+    '8march.mail.ru': 'Mail.ru',
+    'afisha.mail.ru': 'Mail.ru',
+    'agent.mail.ru': 'Mail.ru',
+    'amigo.mail.ru': 'Mail.ru',
+    'analytics.predict.mail.ru': 'Mail.ru',
+    'alpha4.minigames.mail.ru': 'Mail.ru',
+    'alpha3.minigames.mail.ru': 'Mail.ru',
+    'answer.mail.ru': 'Mail.ru',
+    'api.predict.mail.ru': 'Mail.ru',
+    'answers.mail.ru': 'Mail.ru',
+    'authdl.mail.ru': 'Mail.ru',
+    'av.mail.ru': 'Mail.ru',
+    'apps.research.mail.ru': 'Mail.ru',
+    'auto.mail.ru': 'Mail.ru',
+    'bb.mail.ru': 'Mail.ru',
+    'bender.mail.ru': 'Mail.ru',
+    'beko.dom.mail.ru': 'Mail.ru',
+    'azt.mail.ru': 'Mail.ru',
+    'bd.mail.ru': 'Mail.ru',
+    'autodiscover.corp.mail.ru': 'Mail.ru',
+    'aw.mail.ru': 'Mail.ru',
+    'beta.mail.ru': 'Mail.ru',
+    'biz.mail.ru': 'Mail.ru',
+    'blackfriday.mail.ru': 'Mail.ru',
+    'bitva.mail.ru': 'Mail.ru',
+    'blog.mail.ru': 'Mail.ru',
+    'bratva-mr.mail.ru': 'Mail.ru',
+    'browser.mail.ru': 'Mail.ru',
+    'calendar.mail.ru': 'Mail.ru',
+    'capsula.mail.ru': 'Mail.ru',
+    'cdn.newyear.mail.ru': 'Mail.ru',
+    'cars.mail.ru': 'Mail.ru',
+    'code.mail.ru': 'Mail.ru',
+    'cobmo.mail.ru': 'Mail.ru',
+    'cobma.mail.ru': 'Mail.ru',
+    'cog.mail.ru': 'Mail.ru',
+    'cdn.connect.mail.ru': 'Mail.ru',
+    'cf.mail.ru': 'Mail.ru',
+    'comba.mail.ru': 'Mail.ru',
+    'compute.mail.ru': 'Mail.ru',
+    'codefest.mail.ru': 'Mail.ru',
+    'combu.mail.ru': 'Mail.ru',
+    'corp.mail.ru': 'Mail.ru',
+    'commba.mail.ru': 'Mail.ru',
+    'crazypanda.mail.ru': 'Mail.ru',
+    'ctlog.mail.ru': 'Mail.ru',
+    'cpg.money.mail.ru': 'Mail.ru',
+    'ctlog2023.mail.ru': 'Mail.ru',
+    'ctlog2024.mail.ru': 'Mail.ru',
+    'cto.mail.ru': 'Mail.ru',
+    'cups.mail.ru': 'Mail.ru',
+    'da.biz.mail.ru': 'Mail.ru',
+    'da-preprod.biz.mail.ru': 'Mail.ru',
+    'data.amigo.mail.ru': 'Mail.ru',
+    'dk.mail.ru': 'Mail.ru',
+    'dev1.mail.ru': 'Mail.ru',
+    'dev3.mail.ru': 'Mail.ru',
+    'dl.mail.ru': 'Mail.ru',
+    'deti.mail.ru': 'Mail.ru',
+    'dn.mail.ru': 'Mail.ru',
+    'dl.marusia.mail.ru': 'Mail.ru',
+    'doc.mail.ru': 'Mail.ru',
+    'dragonpals.mail.ru': 'Mail.ru',
+    'dom.mail.ru': 'Mail.ru',
+    'duck.mail.ru': 'Mail.ru',
+    'dev2.mail.ru': 'Mail.ru',
+    'ds.mail.ru': 'Mail.ru',
+    'education.mail.ru': 'Mail.ru',
+    'dobro.mail.ru': 'Mail.ru',
+    'esc.predict.mail.ru': 'Mail.ru',
+    'et.mail.ru': 'Mail.ru',
+    'fe.mail.ru': 'Mail.ru',
+    'finance.mail.ru': 'Mail.ru',
+    'five.predict.mail.ru': 'Mail.ru',
+    'foto.mail.ru': 'Mail.ru',
+    'games-bamboo.mail.ru': 'Mail.ru',
+    'games-fisheye.mail.ru': 'Mail.ru',
+    'games.mail.ru': 'Mail.ru',
+    'genesis.mail.ru': 'Mail.ru',
+    'geo-apart.predict.mail.ru': 'Mail.ru',
+    'golos.mail.ru': 'Mail.ru',
+    'go.mail.ru': 'Mail.ru',
+    'gpb.finance.mail.ru': 'Mail.ru',
+    'gibdd.mail.ru': 'Mail.ru',
+    'health.mail.ru': 'Mail.ru',
+    'guns.mail.ru': 'Mail.ru',
+    'horo.mail.ru': 'Mail.ru',
+    'hs.mail.ru': 'Mail.ru',
+    'help.mcs.mail.ru': 'Mail.ru',
+    'imperia.mail.ru': 'Mail.ru',
+    'it.mail.ru': 'Mail.ru',
+    'internet.mail.ru': 'Mail.ru',
+    'infra.mail.ru': 'Mail.ru',
+    'hi-tech.mail.ru': 'Mail.ru',
+    'jd.mail.ru': 'Mail.ru',
+    'journey.mail.ru': 'Mail.ru',
+    'junior.mail.ru': 'Mail.ru',
+    'juggermobile.mail.ru': 'Mail.ru',
+    'kicker.mail.ru': 'Mail.ru',
+    'knights.mail.ru': 'Mail.ru',
+    'kino.mail.ru': 'Mail.ru',
+    'kingdomrift.mail.ru': 'Mail.ru',
+    'kobmo.mail.ru': 'Mail.ru',
+    'komba.mail.ru': 'Mail.ru',
+    'kobma.mail.ru': 'Mail.ru',
+    'kommba.mail.ru': 'Mail.ru',
+    'kombo.mail.ru': 'Mail.ru',
+    'kz.mcs.mail.ru': 'Mail.ru',
+    'konflikt.mail.ru': 'Mail.ru',
+    'kombu.mail.ru': 'Mail.ru',
+    'lady.mail.ru': 'Mail.ru',
+    'landing.mail.ru': 'Mail.ru',
+    'la.mail.ru': 'Mail.ru',
+    'legendofheroes.mail.ru': 'Mail.ru',
+    'legenda.mail.ru': 'Mail.ru',
+    'loa.mail.ru': 'Mail.ru',
+    'love.mail.ru': 'Mail.ru',
+    'lotro.mail.ru': 'Mail.ru',
+    'mailer.mail.ru': 'Mail.ru',
+    'mailexpress.mail.ru': 'Mail.ru',
+    'man.mail.ru': 'Mail.ru',
+    'maps.mail.ru': 'Mail.ru',
+    'marusia.mail.ru': 'Mail.ru',
+    'mcs.mail.ru': 'Mail.ru',
+    'media-golos.mail.ru': 'Mail.ru',
+    'mediapro.mail.ru': 'Mail.ru',
+    'merch-cpg.money.mail.ru': 'Mail.ru',
+    'miniapp.internal.myteam.mail.ru': 'Mail.ru',
+    'media.mail.ru': 'Mail.ru',
+    'mobfarm.mail.ru': 'Mail.ru',
+    'mowar.mail.ru': 'Mail.ru',
+    'mozilla.mail.ru': 'Mail.ru',
+    'mosqa.mail.ru': 'Mail.ru',
+    'mking.mail.ru': 'Mail.ru',
+    'minigames.mail.ru': 'Mail.ru',
+    'nebogame.mail.ru': 'Mail.ru',
+    'money.mail.ru': 'Mail.ru',
+    'net.mail.ru': 'Mail.ru',
+    'new.mail.ru': 'Mail.ru',
+    'newyear2018.mail.ru': 'Mail.ru',
+    'news.mail.ru': 'Mail.ru',
+    'newyear.mail.ru': 'Mail.ru',
+    'nonstandard.sales.mail.ru': 'Mail.ru',
+    'notes.mail.ru': 'Mail.ru',
+    'octavius.mail.ru': 'Mail.ru',
+    'operator.mail.ru': 'Mail.ru',
+    'otvety.mail.ru': 'Mail.ru',
+    'otvet.mail.ru': 'Mail.ru',
+    'otveti.mail.ru': 'Mail.ru',
+    'panzar.mail.ru': 'Mail.ru',
+    'park.mail.ru': 'Mail.ru',
+    'pernatsk.mail.ru': 'Mail.ru',
+    'pets.mail.ru': 'Mail.ru',
+    'pms.mail.ru': 'Mail.ru',
+    'pochtabank.mail.ru': 'Mail.ru',
+    'pokerist.mail.ru': 'Mail.ru',
+    'pogoda.mail.ru': 'Mail.ru',
+    'polis.mail.ru': 'Mail.ru',
+    'primeworld.mail.ru': 'Mail.ru',
+    'pp.mail.ru': 'Mail.ru',
+    'ptd.predict.mail.ru': 'Mail.ru',
+    'public.infra.mail.ru': 'Mail.ru',
+    'pulse.mail.ru': 'Mail.ru',
+    'pubg.mail.ru': 'Mail.ru',
+    'quantum.mail.ru': 'Mail.ru',
+    'rate.mail.ru': 'Mail.ru',
+    'pw.mail.ru': 'Mail.ru',
+    'rebus.calls.mail.ru': 'Mail.ru',
+    'rebus.octavius.mail.ru': 'Mail.ru',
+    'rev.mail.ru': 'Mail.ru',
+    'rl.mail.ru': 'Mail.ru',
+    'rm.mail.ru': 'Mail.ru',
+    'riot.mail.ru': 'Mail.ru',
+    'reseach.mail.ru': 'Mail.ru',
+    's3.babel.mail.ru': 'Mail.ru',
+    'rt.api.operator.mail.ru': 'Mail.ru',
+    's3.mail.ru': 'Mail.ru',
+    's3.media-mobs.mail.ru': 'Mail.ru',
+    'sales.mail.ru': 'Mail.ru',
+    'sangels.mail.ru': 'Mail.ru',
+    'sdk.money.mail.ru': 'Mail.ru',
+    'service.amigo.mail.ru': 'Mail.ru',
+    'security.mail.ru': 'Mail.ru',
+    'shadowbound.mail.ru': 'Mail.ru',
+    'socdwar.mail.ru': 'Mail.ru',
+    'sochi-park.predict.mail.ru': 'Mail.ru',
+    'souz.mail.ru': 'Mail.ru',
+    'sphere.mail.ru': 'Mail.ru',
+    'staging-analytics.predict.mail.ru': 'Mail.ru',
+    'staging-sochi-park.predict.mail.ru': 'Mail.ru',
+    'staging-esc.predict.mail.ru': 'Mail.ru',
+    'stand.bb.mail.ru': 'Mail.ru',
+    'sport.mail.ru': 'Mail.ru',
+    'stand.aoc.mail.ru': 'Mail.ru',
+    'stand.cb.mail.ru': 'Mail.ru',
+    'startrek.mail.ru': 'Mail.ru',
+    'static.dl.mail.ru': 'Mail.ru',
+    'stand.pw.mail.ru': 'Mail.ru',
+    'stand.la.mail.ru': 'Mail.ru',
+    'stormriders.mail.ru': 'Mail.ru',
+    'static.operator.mail.ru': 'Mail.ru',
+    'stream.mail.ru': 'Mail.ru',
+    'status.mcs.mail.ru': 'Mail.ru',
+    'street-combats.mail.ru': 'Mail.ru',
+    'support.biz.mail.ru': 'Mail.ru',
+    'support.mcs.mail.ru': 'Mail.ru',
+    'team.mail.ru': 'Mail.ru',
+    'support.tech.mail.ru': 'Mail.ru',
+    'tech.mail.ru': 'Mail.ru',
+    'tera.mail.ru': 'Mail.ru',
+    'tiles.maps.mail.ru': 'Mail.ru',
+    'todo.mail.ru': 'Mail.ru',
+    'tidaltrek.mail.ru': 'Mail.ru',
+    'tmgame.mail.ru': 'Mail.ru',
+    'townwars.mail.ru': 'Mail.ru',
+    'tv.mail.ru': 'Mail.ru',
+    'ttbh.mail.ru': 'Mail.ru',
+    'typewriter.mail.ru': 'Mail.ru',
+    'u.corp.mail.ru': 'Mail.ru',
+    'ufo.mail.ru': 'Mail.ru',
+    'vkdoc.mail.ru': 'Mail.ru',
+    'vk.mail.ru': 'Mail.ru',
+    'voina.mail.ru': 'Mail.ru',
+    'warface.mail.ru': 'Mail.ru',
+    'wartune.mail.ru': 'Mail.ru',
+    'weblink.predict.mail.ru': 'Mail.ru',
+    'warheaven.mail.ru': 'Mail.ru',
+    'welcome.mail.ru': 'Mail.ru',
+    'webstore.mail.ru': 'Mail.ru',
+    'webagent.mail.ru': 'Mail.ru',
+    'wf.mail.ru': 'Mail.ru',
+    'whatsnew.mail.ru': 'Mail.ru',
+    'wh-cpg.money.mail.ru': 'Mail.ru',
+    'wok.mail.ru': 'Mail.ru',
+    'www.biz.mail.ru': 'Mail.ru',
+    'wos.mail.ru': 'Mail.ru',
+    'www.mail.ru': 'Mail.ru',
+    'www.pubg.mail.ru': 'Mail.ru',
+    'www.wf.mail.ru': 'Mail.ru',
+    'www.mcs.mail.ru': 'Mail.ru',
+    'rs.mail.ru': 'Mail.ru',
+    'top-fwz1.mail.ru': 'Mail.ru',
+    'privacy-cs.mail.ru': 'Mail.ru',
+    'r0.mradx.net': 'Mail.ru',
+    
+    # Медиа и новости
+    'rutube.ru': 'Rutube',
+    'static.rutube.ru': 'Rutube',
+    'rutubelist.ru': 'Rutube',
+    'pic.rutubelist.ru': 'Rutube',
+    'ssp.rutube.ru': 'Rutube',
+    'preview.rutube.ru': 'Rutube',
+    'goya.rutube.ru': 'Rutube',
+    'smotrim.ru': 'Смотрим',
+    'ivi.ru': 'Ivi',
+    'cdn.ivi.ru': 'Ivi',
+    'okko.tv': 'Okko',
+    'start.ru': 'Start',
+    'wink.ru': 'Wink',
+    'kion.ru': 'Kion',
+    'premier.one': 'Premier',
+    'more.tv': 'More.tv',
+    'm.47news.ru': '47 News',
+    'lenta.ru': 'Лента.ру',
+    'gazeta.ru': 'Газета.ру',
+    'kp.ru': 'Комсомольская Правда',
+    'rambler.ru': 'Рамблер',
+    'ria.ru': 'РИА Новости',
+    'tass.ru': 'ТАСС',
+    'interfax.ru': 'Интерфакс',
+    'kommersant.ru': 'Коммерсант',
+    'vedomosti.ru': 'Ведомости',
+    'rbc.ru': 'РБК',
+    'russian.rt.com': 'RT',
+    'iz.ru': 'Известия',
+    'mk.ru': 'Московский Комсомолец',
+    'rg.ru': 'Российская Газета',
+    
+    # Кинопоиск
+    'www.kinopoisk.ru': 'Кинопоиск',
+    'widgets.kinopoisk.ru': 'Кинопоиск',
+    'payment-widget.plus.kinopoisk.ru': 'Кинопоиск',
+    'external-api.mediabilling.kinopoisk.ru': 'Кинопоиск',
+    'external-api.plus.kinopoisk.ru': 'Кинопоиск',
+    'graphql-web.kinopoisk.ru': 'Кинопоиск',
+    'graphql.kinopoisk.ru': 'Кинопоиск',
+    'tickets.widget.kinopoisk.ru': 'Кинопоиск',
+    'st.kinopoisk.ru': 'Кинопоиск',
+    'quiz.kinopoisk.ru': 'Кинопоиск',
+    'payment-widget.kinopoisk.ru': 'Кинопоиск',
+    'payment-widget-smarttv.plus.kinopoisk.ru': 'Кинопоиск',
+    'oneclick-payment.kinopoisk.ru': 'Кинопоиск',
+    'microapps.kinopoisk.ru': 'Кинопоиск',
+    'ma.kinopoisk.ru': 'Кинопоиск',
+    'hd.kinopoisk.ru': 'Кинопоиск',
+    'crowdtest.payment-widget-smarttv.plus.tst.kinopoisk.ru': 'Кинопоиск',
+    'crowdtest.payment-widget.plus.tst.kinopoisk.ru': 'Кинопоиск',
+    'api.plus.kinopoisk.ru': 'Кинопоиск',
+    'st-im.kinopoisk.ru': 'Кинопоиск',
+    'sso.kinopoisk.ru': 'Кинопоиск',
+    'touch.kinopoisk.ru': 'Кинопоиск',
+    
+    # Карты и транспорт
+    '2gis.ru': '2ГИС',
+    '2gis.com': '2ГИС',
+    'api.2gis.ru': '2ГИС',
+    'keys.api.2gis.com': '2ГИС',
+    'favorites.api.2gis.com': '2ГИС',
+    'styles.api.2gis.com': '2ГИС',
+    'tile0.maps.2gis.com': '2ГИС',
+    'tile1.maps.2gis.com': '2ГИС',
+    'tile2.maps.2gis.com': '2ГИС',
+    'tile3.maps.2gis.com': '2ГИС',
+    'tile4.maps.2gis.com': '2ГИС',
+    'api.photo.2gis.com': '2ГИС',
+    'filekeeper-vod.2gis.com': '2ГИС',
+    'i0.photo.2gis.com': '2ГИС',
+    'i1.photo.2gis.com': '2ГИС',
+    'i2.photo.2gis.com': '2ГИС',
+    'i3.photo.2gis.com': '2ГИС',
+    'i4.photo.2gis.com': '2ГИС',
+    'i5.photo.2gis.com': '2ГИС',
+    'i6.photo.2gis.com': '2ГИС',
+    'i7.photo.2gis.com': '2ГИС',
+    'i8.photo.2gis.com': '2ГИС',
+    'i9.photo.2gis.com': '2ГИС',
+    'jam.api.2gis.com': '2ГИС',
+    'catalog.api.2gis.com': '2ГИС',
+    'api.reviews.2gis.com': '2ГИС',
+    'public-api.reviews.2gis.com': '2ГИС',
+    'mapgl.2gis.com': '2ГИС',
+    'd-assets.2gis.ru': '2ГИС',
+    'disk.2gis.com': '2ГИС',
+    's0.bss.2gis.com': '2ГИС',
+    's1.bss.2gis.com': '2ГИС',
+    'ams2-cdn.2gis.com': '2ГИС',
+    'tutu.ru': 'Туту.ру',
+    'img.tutu.ru': 'Туту.ру',
+    'rzd.ru': 'РЖД',
+    'ticket.rzd.ru': 'РЖД',
+    'pass.rzd.ru': 'РЖД',
+    'cargo.rzd.ru': 'РЖД',
+    'company.rzd.ru': 'РЖД',
+    'contacts.rzd.ru': 'РЖД',
+    'team.rzd.ru': 'РЖД',
+    'my.rzd.ru': 'РЖД',
+    'prodvizhenie.rzd.ru': 'РЖД',
+    'disk.rzd.ru': 'РЖД',
+    'market.rzd.ru': 'РЖД',
+    'secure.rzd.ru': 'РЖД',
+    'secure-cloud.rzd.ru': 'РЖД',
+    'travel.rzd.ru': 'РЖД',
+    'welcome.rzd.ru': 'РЖД',
+    'adm.mp.rzd.ru': 'РЖД',
+    'link.mp.rzd.ru': 'РЖД',
+    'pulse.mp.rzd.ru': 'РЖД',
+    'mp.rzd.ru': 'РЖД',
+    'ekmp-a-51.rzd.ru': 'РЖД',
+    'cdek.ru': 'СДЭК',
+    'cdek.market': 'СДЭК',
+    'calc.cdek.ru': 'СДЭК',
+    'pochta.ru': 'Почта России',
+    'ws-api.oneme.ru': 'Oneme',
+    
+    # Телеком
+    'rostelecom.ru': 'Ростелеком',
+    'rt.ru': 'Ростелеком',
+    'mts.ru': 'МТС',
+    'megafon.ru': 'Мегафон',
+    'beeline.ru': 'Билайн',
+    'tele2.ru': 'Tele2',
+    't2.ru': 'Tele2',
+    'www.t2.ru': 'Tele2',
+    'msk.t2.ru': 'Tele2',
+    's3.t2.ru': 'Tele2',
+    'yota.ru': 'Yota',
+    'domru.ru': 'Дом.ру',
+    'ertelecom.ru': 'ЭР-Телеком',
+    'selectel.ru': 'Selectel',
+    'timeweb.ru': 'Timeweb',
+    
+    # Погода
+    'gismeteo.ru': 'Гисметео',
+    'meteoinfo.ru': 'Метео',
+    'rp5.ru': 'RП5',
+    
+    # Работа
+    'hh.ru': 'HeadHunter',
+    'superjob.ru': 'SuperJob',
+    'rabota.ru': 'Работа.ру',
+    
+    # Авто
+    'auto.ru': 'Auto.ru',
+    'sso.auto.ru': 'Auto.ru',
+    'drom.ru': 'Drom',
+    'avto.ru': 'Avto.ru',
+    
+    # Еда
+    'eda.ru': 'Eda.ru',
+    'food.ru': 'Food.ru',
+    'edadeal.ru': 'Edadeal',
+    'delivery-club.ru': 'Delivery Club',
+    
+    # Дом и стройка
+    'leroymerlin.ru': 'Леруа Мерлен',
+    'lemanapro.ru': 'Лемана Про',
+    'cdn.lemanapro.ru': 'Лемана Про',
+    'static.lemanapro.ru': 'Лемана Про',
+    'dmp.dmpkit.lemanapro.ru': 'Лемана Про',
+    'receive-sentry.lmru.tech': 'Лемана Про',
+    'partners.lemanapro.ru': 'Лемана Про',
+    'petrovich.ru': 'Петрович',
+    'maxidom.ru': 'Максидом',
+    'vseinstrumenti.ru': 'ВсеИнструменты',
+    '220-volt.ru': '220 Вольт',
+    
+    # Max
+    'max.ru': 'Max',
+    'dev.max.ru': 'Max',
+    'web.max.ru': 'Max',
+    'api.max.ru': 'Max',
+    'legal.max.ru': 'Max',
+    'st.max.ru': 'Max',
+    'botapi.max.ru': 'Max',
+    'link.max.ru': 'Max',
+    'download.max.ru': 'Max',
+    'i.max.ru': 'Max',
+    'help.max.ru': 'Max',
+    
+    # Прочее
+    'mos.ru': 'Мос.ру',
+    'taximaxim.ru': 'Такси Максим',
+    'moskva.taximaxim.ru': 'Такси Максим',
+}
+
+print(f"📋 Загружено {len(DOMAIN_NAMES)} доменов в словарь")
+
+# ========= ФУНКЦИИ ДЛЯ ОПРЕДЕЛЕНИЯ СТРАНЫ =========
+def get_country_flag(country_code: str) -> str:
+    if not country_code or len(country_code) != 2:
+        return "🏳️"
+    flag = ""
+    for char in country_code.upper():
+        flag += chr(ord(char) + 0x1F1E6 - ord('A'))
+    return flag
+
+def get_country_name(country_code: str) -> str:
+    country_names = {
+        'RU': 'Россия', 'US': 'США', 'DE': 'Германия', 'NL': 'Нидерланды',
+        'GB': 'Великобритания', 'FR': 'Франция', 'CA': 'Канада', 'JP': 'Япония',
+        'SG': 'Сингапур', 'HK': 'Гонконг', 'FI': 'Финляндия', 'SE': 'Швеция',
+        'NO': 'Норвегия', 'DK': 'Дания', 'PL': 'Польша', 'CZ': 'Чехия',
+        'AT': 'Австрия', 'CH': 'Швейцария', 'BE': 'Бельгия', 'IT': 'Италия',
+        'ES': 'Испания', 'PT': 'Португалия', 'AU': 'Австралия', 'NZ': 'Новая Зеландия',
+        'BR': 'Бразилия', 'ZA': 'ЮАР', 'IN': 'Индия', 'KR': 'Корея', 'CN': 'Китай',
+        'TW': 'Тайвань', 'UA': 'Украина', 'KZ': 'Казахстан', 'BY': 'Беларусь',
+        'LV': 'Латвия', 'LT': 'Литва', 'EE': 'Эстония', 'RO': 'Румыния', 'BG': 'Болгария',
+        'HU': 'Венгрия', 'SK': 'Словакия', 'SI': 'Словения', 'HR': 'Хорватия',
+        'RS': 'Сербия', 'TR': 'Турция', 'IL': 'Израиль', 'AE': 'ОАЭ', 'SA': 'Саудовская Аравия',
+        'EG': 'Египет',
+    }
+    return country_names.get(country_code.upper(), country_code)
+
+def save_country_cache(country_info: dict, host: str):
+    cache = {}
+    if os.path.exists(COUNTRY_CACHE_FILE):
         try:
-            link = link.strip()
-            if not link or not link.startswith('vless://'):
-                return None
-            
-            # Удаляем vless://
-            rest = link[8:]
-            
-            # Разделяем на UUID@host:port и параметры
-            if '@' in rest:
-                uuid_host, params_part = rest.split('@', 1)
-                
-                # UUID
-                uuid = uuid_host
-                
-                # Host и Port
-                if '?' in params_part:
-                    host_port = params_part.split('?')[0]
-                    query_part = params_part.split('?', 1)[1]
-                else:
-                    host_port = params_part
-                    query_part = ""
-                
-                if ':' in host_port:
-                    host = host_port.split(':')[0]
-                    try:
-                        port = int(host_port.split(':')[1])
-                    except:
-                        port = 443
-                else:
-                    host = host_port
-                    port = 443
-                
-                # Параметры
-                params = {}
-                if query_part:
-                    # Убираем якорь если есть
-                    if '#' in query_part:
-                        query_part, name_part = query_part.split('#', 1)
-                        name = urllib.parse.unquote(name_part)
-                    else:
-                        name = "Xray Proxy"
-                    
-                    for param in query_part.split('&'):
-                        if '=' in param:
-                            key, value = param.split('=', 1)
-                            params[key] = value
-                else:
-                    name = "Xray Proxy"
-                
-                # Название из якоря
-                if '#' in link:
-                    name_part = link.split('#', 1)[1]
-                    name = urllib.parse.unquote(name_part)
-                
-                # Очищаем имя от лишних символов
-                name = re.sub(r'[^\w\s\-\_\.,\(\)\[\]\{\}\@\#\&\*\+]', '', name)
-                
-                return {
-                    'uuid': uuid,
-                    'host': host,
-                    'port': port,
-                    'params': params,
-                    'name': name or f"{host}:{port}",
-                    'raw': link
-                }
-        except Exception as e:
-            if self.verbose:
-                print(f"{RED}Ошибка парсинга {link[:50]}...: {e}{RESET}")
-        
+            with open(COUNTRY_CACHE_FILE, 'r', encoding='utf-8') as f:
+                cache = json.load(f)
+        except:
+            pass
+    cache[host] = {
+        'country': country_info.get('country'),
+        'ip': country_info.get('ip'),
+        'city': country_info.get('city'),
+        'org': country_info.get('org'),
+        'timestamp': datetime.now().isoformat()
+    }
+    try:
+        with open(COUNTRY_CACHE_FILE, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, indent=2, ensure_ascii=False)
+    except:
+        pass
+
+def check_tcp_connection(host: str, port: int, timeout: int = 2) -> bool:
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(timeout)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except:
+        return False
+
+def get_country_info_direct(host: str, port: int) -> dict:
+    country_info = {'ip': host, 'country': None, 'city': None, 'region': None, 'org': None, 'timezone': None, 'success': False}
+    try:
+        is_ip = re.match(r'^(\d{1,3}\.){3}\d{1,3}$', host) is not None
+        if is_ip:
+            target_ip = host
+        else:
+            try:
+                target_ip = socket.gethostbyname(host)
+                country_info['ip'] = target_ip
+            except:
+                target_ip = host
+        try:
+            import urllib.request
+            url = f"https://ipapi.co/{target_ip}/json/"
+            req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                if data.get('country_code'):
+                    country_info['country'] = data.get('country_code')
+                    country_info['success'] = True
+                    return country_info
+        except:
+            pass
+        try:
+            url = f"http://ip-api.com/json/{target_ip}?fields=status,countryCode,city,region,org,timezone"
+            with urllib.request.urlopen(url, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                if data.get('status') == 'success' and data.get('countryCode'):
+                    country_info['country'] = data.get('countryCode')
+                    country_info['success'] = True
+                    return country_info
+        except:
+            pass
+        try:
+            url = f"https://ipwhois.io/json/{target_ip}"
+            with urllib.request.urlopen(url, timeout=5) as response:
+                data = json.loads(response.read().decode())
+                if data.get('country_code'):
+                    country_info['country'] = data.get('country_code')
+                    country_info['success'] = True
+                    return country_info
+        except:
+            pass
+    except:
+        pass
+    return country_info
+
+def get_country_info_fallback(host: str, port: int) -> dict:
+    country_info = get_country_info_direct(host, port)
+    if not country_info.get('country'):
+        if port == 443:
+            try:
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                with socket.create_connection((host, port), timeout=5) as sock:
+                    with context.wrap_socket(sock, server_hostname=host) as ssock:
+                        cert = ssock.getpeercert()
+                        if cert and 'subject' in cert:
+                            for item in cert['subject']:
+                                for key, value in item:
+                                    if key == 'countryName':
+                                        country_info['country'] = value
+                                        country_info['success'] = True
+                                        return country_info
+            except:
+                pass
+    return country_info
+
+def parse_vless_host(url: str) -> str:
+    try:
+        if not url.startswith('vless://'):
+            return None
+        content = url[8:]
+        at_pos = content.find('@')
+        if at_pos == -1:
+            return None
+        after_at = content[at_pos+1:]
+        q_pos = after_at.find('?')
+        if q_pos != -1:
+            host_part = after_at[:q_pos]
+        else:
+            host_part = after_at
+        hash_pos = host_part.find('#')
+        if hash_pos != -1:
+            host_part = host_part[:hash_pos]
+        if ':' in host_part:
+            host = host_part.split(':', 1)[0]
+        else:
+            host = host_part
+        return host
+    except:
         return None
+
+# ========= ЛОГ =========
+async def log(message: str):
+    try:
+        now = datetime.now()
+        if os.path.exists(LOG_FILE):
+            mtime = datetime.fromtimestamp(os.path.getmtime(LOG_FILE))
+            if now - mtime > timedelta(seconds=LOG_CLEAN_INTERVAL):
+                open(LOG_FILE, "w").close()
+        async with aiofiles.open(LOG_FILE, "a", encoding="utf-8") as f:
+            await f.write(f"[{now}] {message}\n")
+    except:
+        pass
+
+def log_xray_error(message: str):
+    try:
+        with open(XRAY_LOG_FILE, "a", encoding="utf-8") as f:
+            f.write(f"[{datetime.now().strftime('%H:%M:%S')}] {message}\n")
+    except:
+        pass
+
+# ========= ВАЛИДАЦИЯ =========
+def validate_vless(url: str) -> bool:
+    if not url.startswith("vless://"):
+        return False
+    if not UUID_REGEX.search(url):
+        return False
+    if "@" not in url:
+        return False
+    if ":" not in url:
+        return False
+    return True
+
+# ========= WHITELIST =========
+def load_whitelist_domains():
+    domains = set()
+    suffixes = []
+    if os.path.exists("whitelist.txt"):
+        try:
+            with open("whitelist.txt", "r", encoding="utf-8", errors="ignore") as f:
+                for line in f:
+                    d = line.strip().lower()
+                    if not d:
+                        continue
+                    domains.add(d)
+                    suffixes.append("." + d)
+            print(f"📋 Загружено {len(domains)} доменов из whitelist.txt")
+        except:
+            print("⚠️ Ошибка загрузки whitelist.txt")
+    return domains, suffixes
+
+# ========= ПРОТОКОЛ / SNI / НАЗВАНИЕ =========
+def detect_protocol(vless_url: str) -> str:
+    try:
+        no_scheme = vless_url[len("vless://"):]
+        after_at = no_scheme.split("@", 1)[1]
+        query = after_at.split("?", 1)[1] if "?" in after_at else ""
+        params = {}
+        for part in query.split("&"):
+            if "=" in part:
+                k, v = part.split("=", 1)
+                params[k.lower()] = v.lower()
+        transport = params.get("type", "").lower()
+        security = params.get("security", "").lower()
+        if transport in ("ws", "websocket"):
+            return "WS"
+        if transport in ("grpc", "gun"):
+            return "gRPC"
+        if transport in ("xhttp", "httpupgrade"):
+            return "XHTTP"
+        if transport in ("h2", "http2"):
+            return "H2"
+        if transport == "tcp":
+            return "TCP"
+        if security == "reality":
+            return "Reality"
+        if security in ("tls", "xtls"):
+            return "TLS"
+        return "TCP"
+    except:
+        return "Неизвестно"
+
+def extract_all_possible_domains(vless_url: str) -> list:
+    domains = set()
+    try:
+        if not vless_url.startswith("vless://"):
+            return []
+        content = vless_url[8:]
+        at_pos = content.find('@')
+        if at_pos == -1:
+            return []
+        after_at = content[at_pos+1:]
+        q_pos = after_at.find('?')
+        if q_pos != -1:
+            host_part = after_at[:q_pos]
+            query_part = after_at[q_pos+1:]
+        else:
+            host_part = after_at
+            query_part = ""
+        if ':' in host_part:
+            host = host_part.split(':', 1)[0]
+        else:
+            host = host_part
+        if host and '.' in host:
+            domains.add(host.lower())
+        if query_part:
+            if '#' in query_part:
+                query_part = query_part.split('#', 1)[0]
+            for param in query_part.split('&'):
+                if '=' in param:
+                    k, v = param.split('=', 1)
+                    try:
+                        v_decoded = urllib.parse.unquote(v).lower()
+                    except:
+                        v_decoded = v.lower()
+                    if k.lower() == 'sni' and '.' in v_decoded:
+                        domains.add(v_decoded)
+                    elif k.lower() == 'host' and '.' in v_decoded:
+                        domains.add(v_decoded)
+                    elif k.lower() == 'path':
+                        path_parts = re.findall(r'[a-zA-Z0-9][a-zA-Z0-9\-\.]+[a-zA-Z0-9]\.[a-zA-Z]{2,}', v_decoded)
+                        for d in path_parts:
+                            domains.add(d.lower())
+        if '#' in after_at:
+            fragment = after_at.split('#', 1)[1]
+            try:
+                fragment_decoded = urllib.parse.unquote(fragment)
+                domain_in_frag = re.findall(r'[a-zA-Z0-9][a-zA-Z0-9\-\.]+[a-zA-Z0-9]\.[a-zA-Z]{2,}', fragment_decoded)
+                for d in domain_in_frag:
+                    domains.add(d.lower())
+            except:
+                pass
+        return list(domains)
+    except Exception as e:
+        return []
+
+def get_human_name(domain: str) -> str:
+    if not domain:
+        return "Неизвестно"
+    d = domain.lower()
+    if d in DOMAIN_NAMES:
+        return DOMAIN_NAMES[d]
+    parts = d.split('.')
+    for i in range(len(parts) - 1):
+        sub = ".".join(parts[i:])
+        if sub in DOMAIN_NAMES:
+            return DOMAIN_NAMES[sub]
+    if len(parts) >= 2:
+        base = ".".join(parts[-2:])
+        if base in DOMAIN_NAMES:
+            return DOMAIN_NAMES[base]
+    for key in DOMAIN_NAMES:
+        if d.endswith("." + key):
+            return DOMAIN_NAMES[key]
+    return "Неизвестно"
+
+def filter_by_sni(vless_url: str, whitelist_domains: set, whitelist_suffixes: list) -> bool:
+    domains = extract_all_possible_domains(vless_url)
+    for domain in domains:
+        if domain in whitelist_domains:
+            return True
+        for suffix in whitelist_suffixes:
+            if domain.endswith(suffix):
+                return True
+        parts = domain.split('.')
+        if len(parts) >= 2:
+            base_domain = '.'.join(parts[-2:])
+            if base_domain in whitelist_domains:
+                return True
+    if not whitelist_domains:
+        for domain in domains:
+            if domain in DOMAIN_NAMES:
+                return True
+            parts = domain.split('.')
+            for i in range(len(parts) - 1):
+                sub = ".".join(parts[i:])
+                if sub in DOMAIN_NAMES:
+                    return True
+            if len(parts) >= 2:
+                base = ".".join(parts[-2:])
+                if base in DOMAIN_NAMES:
+                    return True
+            for key in DOMAIN_NAMES:
+                if domain.endswith("." + key):
+                    return True
+    return False
+
+# ========= СКАЧИВАНИЕ =========
+async def fetch(session, url, sem):
+    async with sem:
+        try:
+            print(f"Скачиваю: {url}")
+            async with session.get(url, timeout=15) as resp:
+                if resp.status == 200:
+                    return await resp.text()
+        except Exception as e:
+            await log(f"Ошибка при скачивании {url}: {e}")
+    return None
+
+async def process_url(session, url, sem, output_lock, stats):
+    content = await fetch(session, url, sem)
+    stats["processed"] += 1
+    if not content:
+        return
+    matches = VLESS_REGEX.findall(content)
+    if matches:
+        async with output_lock:
+            async with aiofiles.open(OUTPUT_FILE, "a", encoding="utf-8") as f:
+                for m in matches:
+                    await f.write(m + "\n")
+        stats["found"] += len(matches)
+    print(f"Обработано: {stats['processed']} | Найдено VLESS: {stats['found']}", end="\r")
+
+# ========= ОЧИСТКА =========
+async def clean_vless():
+    print("\nОчищаю дубликаты и проверяю валидность...")
+    if not os.path.exists(OUTPUT_FILE):
+        print("Нет файла url.txt — пропускаю очистку.")
+        return
+    try:
+        async with aiofiles.open(OUTPUT_FILE, "r", encoding="utf-8") as f:
+            lines = await f.readlines()
+    except:
+        print("Ошибка чтения файла")
+        return
+    unique = set()
+    valid = []
+    for line in lines:
+        url = line.strip()
+        if url and url not in unique and validate_vless(url):
+            unique.add(url)
+            valid.append(url)
+    async with aiofiles.open(CLEAN_FILE, "w", encoding="utf-8") as f:
+        for url in valid:
+            await f.write(url + "\n")
+    print(f"Очистка завершена. Итоговых конфигов: {len(valid)}")
+
+# ========= ФИЛЬТРАЦИЯ =========
+async def filter_vless():
+    print("\n=== Фильтрация по whitelist ===")
+    if not os.path.exists(CLEAN_FILE):
+        print("Нет файла url_clean.txt — пропускаю фильтрацию.")
+        return
+    domains, suffixes = load_whitelist_domains()
+    try:
+        with open(CLEAN_FILE, "r", encoding="utf-8", errors="ignore") as f:
+            total = sum(1 for _ in f)
+    except:
+        total = 0
+    passed = 0
+    processed = 0
+    async with aiofiles.open(CLEAN_FILE, "r", encoding="utf-8") as f_in, \
+               aiofiles.open(FILTERED_FILE, "w", encoding="utf-8") as f_out:
+        async for line in f_in:
+            processed += 1
+            url = line.strip()
+            if not url:
+                continue
+            if filter_by_sni(url, domains, suffixes):
+                await f_out.write(url + "\n")
+                passed += 1
+            if processed % 100 == 0 and total > 0:
+                print(f"Фильтрация: {processed}/{total} | Подошло: {passed}", end="\r")
+    print(f"\nФильтрация завершена. Итог: {passed} конфигов.")
+
+# ========= ПЕРЕИМЕНОВАНИЕ =========
+async def rename_configs():
+    print("\n=== Переименование конфигов по протоколу и SNI ===")
+    if not os.path.exists(FILTERED_FILE):
+        print("Нет файла url_filtered.txt — пропускаю переименование.")
+        return
+    try:
+        with open(FILTERED_FILE, "r", encoding="utf-8", errors="ignore") as f:
+            total = sum(1 for _ in f)
+    except:
+        total = 0
+    processed = 0
+    async with aiofiles.open(FILTERED_FILE, "r", encoding="utf-8") as f_in, \
+               aiofiles.open(NAMED_FILE, "w", encoding="utf-8") as f_out:
+        async for line in f_in:
+            processed += 1
+            url = line.strip()
+            if not url:
+                continue
+            protocol = detect_protocol(url)
+            domains = extract_all_possible_domains(url)
+            human_name = "Неизвестно"
+            if domains:
+                for domain in domains:
+                    name = get_human_name(domain)
+                    if name != "Неизвестно":
+                        human_name = name
+                        break
+                if human_name == "Неизвестно" and domains:
+                    human_name = domains[0].split('.')[-2].capitalize() if len(domains[0].split('.')) >= 2 else domains[0]
+            title = f"{protocol}, {human_name} [#РКП]"
+            base = url.split("#", 1)[0]
+            new_url = f"{base}#{title}"
+            await f_out.write(new_url + "\n")
+            if processed % 500 == 0 and total > 0:
+                print(f"Переименовано: {processed}/{total}", end="\r")
+    print(f"\nПереименование завершено. Итог: {processed} конфигов.")
+
+# ========= НОРМАЛИЗАЦИЯ URL =========
+def encode_vless_url(url: str) -> str:
+    try:
+        if not url.startswith("vless://"):
+            return url
+        content = url[8:]
+        at_pos = content.find('@')
+        if at_pos == -1:
+            return url
+        uuid = content[:at_pos]
+        after_at = content[at_pos+1:]
+        q_pos = after_at.find('?')
+        if q_pos != -1:
+            host_part = after_at[:q_pos]
+            params_part = after_at[q_pos+1:]
+        else:
+            host_part = after_at
+            params_part = ""
+        hash_pos = host_part.find('#')
+        if hash_pos != -1:
+            host_only = host_part[:hash_pos]
+            fragment = host_part[hash_pos+1:]
+        else:
+            host_only = host_part
+            fragment = ""
+        if not fragment and params_part:
+            hash_pos = params_part.find('#')
+            if hash_pos != -1:
+                params_only = params_part[:hash_pos]
+                fragment = params_part[hash_pos+1:]
+                params_part = params_only
+        params = {}
+        if params_part:
+            for param in params_part.split('&'):
+                if '=' in param:
+                    k, v = param.split('=', 1)
+                    params[k] = v
+        encoded_params = []
+        for k, v in params.items():
+            if k in ['security', 'type', 'fp', 'pbk', 'sid', 'flow']:
+                encoded_params.append(f"{k}={v}")
+            else:
+                try:
+                    encoded_params.append(f"{k}={urllib.parse.quote(v, safe='')}")
+                except:
+                    encoded_params.append(f"{k}={v}")
+        new_params = "&".join(encoded_params) if encoded_params else ""
+        if fragment:
+            try:
+                if any(ord(c) > 127 for c in fragment):
+                    encoded_fragment = urllib.parse.quote(fragment, safe='')
+                else:
+                    encoded_fragment = fragment
+            except:
+                encoded_fragment = fragment
+        else:
+            encoded_fragment = ""
+        base = f"vless://{uuid}@{host_only}"
+        if new_params:
+            base += f"?{new_params}"
+        if encoded_fragment:
+            base += f"#{encoded_fragment}"
+        return base
+    except Exception as e:
+        return url
+
+async def encode_all_configs():
+    print("\n=== Кодирование конфигов для Xray ===")
+    if not os.path.exists(NAMED_FILE):
+        print("Нет файла url_named.txt — пропускаю кодирование.")
+        return
+    try:
+        with open(NAMED_FILE, 'r', encoding='utf-8') as f:
+            configs = [line.strip() for line in f if line.strip()]
+    except:
+        print("Ошибка чтения файла")
+        return
+    total = len(configs)
+    changed = 0
+    async with aiofiles.open(ENCODED_FILE, "w", encoding="utf-8") as f_out:
+        for i, url in enumerate(configs, 1):
+            encoded_url = encode_vless_url(url)
+            await f_out.write(encoded_url + "\n")
+            if encoded_url != url:
+                changed += 1
+            if i % 500 == 0:
+                print(f"Закодировано: {i}/{total} | Изменено: {changed}", end="\r")
+    print(f"\nКодирование завершено. Всего: {total}, изменено: {changed}")
+
+# ========= XRAY-ТЕСТЕР С ФИЛЬТРАЦИЕЙ ПО ПИНГУ =========
+class SimpleProgress:
+    def __init__(self, total):
+        self.total = total
+        self.current = 0
+        self.start_time = time.time()
+        self.lock = threading.Lock()
+        self.working_count = 0
+        self.retry_count = 0
+        self.rejected_count = 0  # Добавлен счетчик отклоненных по пингу
     
-    def create_xray_config(self, proxy_info: Dict) -> Dict:
-        """Создание конфигурации Xray для прокси"""
-        params = proxy_info['params']
+    def update(self, status='', working=False, retry=False, rejected=False):
+        with self.lock:
+            self.current += 1
+            if working:
+                self.working_count += 1
+            if retry:
+                self.retry_count += 1
+            if rejected:
+                self.rejected_count += 1
+            if self.current % 10 == 0 or self.current == self.total:
+                elapsed = time.time() - self.start_time
+                speed = self.current / elapsed if elapsed > 0 else 0
+                print(f"\r📊 [{self.current}/{self.total}] ✅:{self.working_count} ❌:{self.rejected_count} 🔄:{self.retry_count} {speed:.1f} к/с {status}", end='', flush=True)
+    
+    def finish(self):
+        elapsed = time.time() - self.start_time
+        print(f"\r✅ Готово! {self.current} конфигов за {elapsed:.1f}с ({self.current/elapsed:.1f} к/с), рабочих: {self.working_count}, отклонено по пингу: {self.rejected_count}, повторов: {self.retry_count}")
+
+class PortManager:
+    def __init__(self, start=20000, end=25000):
+        self.ports = list(range(start, end + 1))
+        self.used = set()
+        self.lock = threading.Lock()
+    
+    def get_port(self):
+        with self.lock:
+            available = [p for p in self.ports if p not in self.used]
+            if not available:
+                return None
+            port = random.choice(available)
+            self.used.add(port)
+            return port
+    
+    def release_port(self, port):
+        with self.lock:
+            self.used.discard(port)
+
+class XrayTester:
+    def __init__(self, input_file='url_encoded.txt', output_file='url_work.txt', max_workers=10, max_ping_ms=8000):
+        self.input_file = input_file
+        self.output_file = output_file
+        self.max_workers = max_workers
+        self.max_ping_ms = max_ping_ms  # Максимальный допустимый пинг
+        self.test_url = XRAY_TEST_URL
+        self.timeout = XRAY_TIMEOUT
+        self.max_retries = MAX_RETRIES
+        self.retry_delay = RETRY_DELAY
         
-        # Базовая конфигурация
-        config = {
-            "log": {
-                "loglevel": "error" if not self.verbose else "debug",
-                "access": "/dev/null",
-                "error": "/dev/null"
-            },
-            "inbounds": [
-                {
-                    "port": 10808,
+        if platform.system() == 'Windows':
+            self.xray_path = Path('./xray_bin/xray.exe')
+        else:
+            possible_paths = ['/usr/bin/xray', '/usr/local/bin/xray', './xray_bin/xray', '/opt/xray/xray']
+            self.xray_path = None
+            for path in possible_paths:
+                if Path(path).exists():
+                    self.xray_path = Path(path)
+                    break
+            if not self.xray_path:
+                self.xray_path = Path('/usr/bin/xray')
+        
+        self.port_manager = PortManager()
+        self.debug_file = DEBUG_FILE
+        self.xray_log_file = XRAY_LOG_FILE
+        
+        self.country_cache = {}
+        if os.path.exists(COUNTRY_CACHE_FILE):
+            try:
+                with open(COUNTRY_CACHE_FILE, 'r', encoding='utf-8') as f:
+                    self.country_cache = json.load(f)
+                print(f"📋 Загружено {len(self.country_cache)} записей из кэша стран")
+            except:
+                pass
+        
+        self.saved_urls = set()
+        if os.path.exists(output_file):
+            try:
+                with open(output_file, 'r', encoding='utf-8') as f:
+                    for line in f:
+                        url = line.strip()
+                        if url:
+                            self.saved_urls.add(url)
+                print(f"📋 Загружено {len(self.saved_urls)} уже сохраненных конфигов из {output_file}")
+            except:
+                pass
+        
+        print(f"🔍 XrayTester инициализирован")
+        print(f"   📁 Входной файл: {self.input_file}")
+        print(f"   📁 Выходной файл: {self.output_file}")
+        print(f"   📁 Xray путь: {self.xray_path}")
+        print(f"   ⚡ Потоков: {self.max_workers}")
+        print(f"   ⏱️ Максимальный пинг: {self.max_ping_ms}ms")
+        
+        self.xray_available = self.check_xray()
+    
+    def check_xray(self):
+        if not self.xray_path or not self.xray_path.exists():
+            print(f"⚠️ Xray не найден по пути: {self.xray_path}")
+            return False
+        try:
+            result = subprocess.run([str(self.xray_path), '-version'], 
+                                  capture_output=True, text=True, timeout=5)
+            version = result.stdout.split('\n')[0] if result.stdout else 'Unknown'
+            print(f"✅ Xray готов: {version}")
+            return True
+        except Exception as e:
+            print(f"⚠️ Ошибка Xray: {e}")
+            return False
+
+    def parse_vless_url(self, url):
+        try:
+            if not url.startswith('vless://'):
+                return None
+            content = url[8:]
+            at_pos = content.find('@')
+            if at_pos == -1:
+                return None
+            uuid = content[:at_pos]
+            after_at = content[at_pos+1:]
+            q_pos = after_at.find('?')
+            if q_pos != -1:
+                host_part = after_at[:q_pos]
+                query = after_at[q_pos+1:]
+            else:
+                host_part = after_at
+                query = ""
+            hash_pos = host_part.find('#')
+            if hash_pos != -1:
+                host_part = host_part[:hash_pos]
+            if ':' in host_part:
+                host, port_str = host_part.split(':', 1)
+                try:
+                    port = int(port_str)
+                except:
+                    port = 443
+            else:
+                host = host_part
+                port = 443
+            params = {}
+            if query:
+                for param in query.split('&'):
+                    if '=' in param:
+                        k, v = param.split('=', 1)
+                        try:
+                            v = urllib.parse.unquote(v)
+                        except:
+                            pass
+                        params[k] = v
+            return {
+                'uuid': uuid,
+                'host': host,
+                'port': port,
+                'params': params,
+                'url': url
+            }
+        except Exception as e:
+            return None
+
+    def create_xray_config(self, parsed, port):
+        try:
+            params = parsed['params']
+            flow = params.get('flow', '')
+            security = params.get('security', '')
+            
+            config = {
+                "log": {"loglevel": "error"},
+                "inbounds": [{
+                    "port": port,
                     "protocol": "socks",
-                    "settings": {
-                        "auth": "noauth",
-                        "udp": True
-                    },
-                    "sniffing": {
-                        "enabled": True,
-                        "destOverride": ["http", "tls"]
-                    }
-                },
-                {
-                    "port": 10809,
-                    "protocol": "http",
-                    "settings": {
-                        "auth": "noauth",
-                        "udp": True
-                    },
-                    "sniffing": {
-                        "enabled": True,
-                        "destOverride": ["http", "tls"]
-                    }
-                }
-            ],
-            "outbounds": [
-                {
+                    "settings": {"auth": "noauth", "udp": False},
+                    "tag": "socks-in"
+                }],
+                "outbounds": [{
                     "protocol": "vless",
                     "settings": {
-                        "vnext": [
-                            {
-                                "address": proxy_info['host'],
-                                "port": proxy_info['port'],
-                                "users": [
-                                    {
-                                        "id": proxy_info['uuid'],
-                                        "encryption": params.get('encryption', 'none'),
-                                        "flow": params.get('flow', '')
-                                    }
-                                ]
-                            }
-                        ]
+                        "vnext": [{
+                            "address": parsed['host'],
+                            "port": parsed['port'],
+                            "users": [{
+                                "id": parsed['uuid'],
+                                "encryption": "none",
+                                "flow": flow
+                            }]
+                        }]
                     },
                     "streamSettings": {
                         "network": params.get('type', 'tcp'),
-                        "security": params.get('security', 'none')
-                    }
-                },
-                {
-                    "protocol": "freedom",
-                    "tag": "direct"
-                },
-                {
-                    "protocol": "blackhole",
-                    "tag": "block"
-                }
-            ],
-            "routing": {
-                "rules": [
-                    {
-                        "type": "field",
-                        "inboundTag": ["api"],
-                        "outboundTag": "api"
+                        "security": security
                     },
-                    {
-                        "type": "field",
-                        "outboundTag": "direct",
-                        "ip": ["0.0.0.0/0", "::/0"]
-                    }
-                ]
-            }
-        }
-        
-        # Настройки streamSettings в зависимости от типа
-        network = config['outbounds'][0]['streamSettings']['network']
-        
-        if network == 'ws' or params.get('type') == 'ws':
-            config['outbounds'][0]['streamSettings']['network'] = 'ws'
-            
-            ws_settings = {}
-            if params.get('path'):
-                ws_settings['path'] = params['path']
-            if params.get('host'):
-                ws_settings['headers'] = {"Host": params['host']}
-            
-            config['outbounds'][0]['streamSettings']['wsSettings'] = ws_settings
-        
-        if params.get('security') == 'reality':
-            config['outbounds'][0]['streamSettings']['security'] = 'reality'
-            reality_settings = {
-                "serverName": params.get('sni', proxy_info['host']),
-                "fingerprint": params.get('fp', 'chrome'),
-                "show": False,
-                "publicKey": params.get('pbk', ''),
-                "shortId": params.get('sid', '')
-            }
-            config['outbounds'][0]['streamSettings']['realitySettings'] = reality_settings
-        
-        elif params.get('security') == 'tls':
-            config['outbounds'][0]['streamSettings']['security'] = 'tls'
-            tls_settings = {
-                "serverName": params.get('sni', proxy_info['host']),
-                "fingerprint": params.get('fp', 'chrome'),
-                "allowInsecure": True
-            }
-            config['outbounds'][0]['streamSettings']['tlsSettings'] = tls_settings
-        
-        return config
-    
-    def test_tcp_connect(self, host: str, port: int, timeout: int = 3) -> Tuple[bool, float]:
-        """Быстрый TCP тест без прокси"""
-        try:
-            start = time.time()
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            result = sock.connect_ex((host, port))
-            sock.close()
-            
-            if result == 0:
-                return True, time.time() - start
-        except:
-            pass
-        return False, 0
-    
-    def test_tls_handshake(self, host: str, port: int = 443, sni: str = None) -> Tuple[bool, float]:
-        """Проверка TLS рукопожатия"""
-        try:
-            context = ssl.create_default_context()
-            context.check_hostname = False
-            context.verify_mode = ssl.CERT_NONE
-            
-            start = time.time()
-            with socket.create_connection((host, port), timeout=5) as sock:
-                with context.wrap_socket(sock, server_hostname=sni or host) as ssock:
-                    cert = ssock.getpeercert()
-                    elapsed = time.time() - start
-                    return True, elapsed
-        except Exception as e:
-            if self.verbose:
-                print(f"TLS error: {e}")
-        return False, 0
-    
-    def test_proxy_connection(self, proxy_info: Dict) -> Tuple[bool, float, Dict]:
-        """Тестирование подключения через прокси"""
-        if not self.xray_binary:
-            return False, 0, {"error": "Xray не найден"}
-        
-        config = self.create_xray_config(proxy_info)
-        config_hash = hashlib.md5(proxy_info['raw'].encode()).hexdigest()[:8]
-        config_path = os.path.join(self.temp_dir, f"config_{config_hash}.json")
-        
-        with open(config_path, 'w') as f:
-            json.dump(config, f, indent=2)
-        
-        # Запускаем Xray
-        process = None
-        try:
-            # Запуск в фоне
-            process = subprocess.Popen(
-                [self.xray_binary, '-c', config_path],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            
-            # Даем время на запуск
-            time.sleep(1.5)
-            
-            # Проверяем запустился ли
-            if process.poll() is not None:
-                return False, 0, {"error": "Xray не запустился"}
-            
-            # Тестируем через SOCKS5 прокси
-            socks5_proxy = "socks5://127.0.0.1:10808"
-            
-            results = {
-                "direct": {"success": False, "time": 0, "ip": None, "country": None},
-                "proxied": {"success": False, "time": 0, "ip": None, "country": None, "speed": 0},
-                "tests": []
+                    "tag": "proxy"
+                }]
             }
             
-            # 1. Проверка базового подключения
-            for test_url in self.test_urls[:3]:
-                try:
-                    start_time = time.time()
-                    
-                    cmd = [
-                        'curl', '-s', '-o', '/dev/null', '-w', '%{http_code}',
-                        '--socks5-hostname', socks5_proxy,
-                        '--connect-timeout', str(self.timeout),
-                        '--max-time', str(self.timeout + 5),
-                        test_url
-                    ]
-                    
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout + 10)
-                    
-                    if result.stdout.strip() in ['204', '200', '301', '302']:
-                        elapsed = time.time() - start_time
-                        results["proxied"]["success"] = True
-                        results["proxied"]["time"] = elapsed
-                        results["tests"].append({
-                            "url": test_url,
-                            "status": "success",
-                            "time": elapsed
-                        })
-                        break
-                except Exception as e:
-                    results["tests"].append({
-                        "url": test_url,
-                        "status": "failed",
-                        "error": str(e)[:50]
-                    })
-                    continue
-            
-            # 2. Определение IP и страны через прокси
-            if results["proxied"]["success"]:
-                try:
-                    cmd = [
-                        'curl', '-s', '--socks5-hostname', socks5_proxy,
-                        '--connect-timeout', str(self.timeout),
-                        '--max-time', str(self.timeout + 5),
-                        'https://ipinfo.io/json'
-                    ]
-                    result = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout + 10)
-                    
-                    if result.returncode == 0 and result.stdout:
-                        try:
-                            ip_data = json.loads(result.stdout)
-                            results["proxied"]["ip"] = ip_data.get('ip')
-                            results["proxied"]["country"] = ip_data.get('country')
-                            results["proxied"]["city"] = ip_data.get('city')
-                            results["proxied"]["region"] = ip_data.get('region')
-                            results["proxied"]["org"] = ip_data.get('org')
-                            results["proxied"]["timezone"] = ip_data.get('timezone')
-                        except:
-                            pass
-                except:
-                    pass
-                
-                # Альтернативный метод определения IP
-                if not results["proxied"].get("ip"):
-                    try:
-                        cmd = [
-                            'curl', '-s', '--socks5-hostname', socks5_proxy,
-                            '--connect-timeout', str(self.timeout),
-                            'https://api.ipify.org'
-                        ]
-                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
-                        if result.returncode == 0 and result.stdout:
-                            results["proxied"]["ip"] = result.stdout.strip()
-                    except:
-                        pass
-            
-            # 3. Проверка без прокси для сравнения
-            try:
-                start_time = time.time()
-                cmd = ['curl', '-s', '-o', '/dev/null', '-w', '%{http_code}',
-                       '--connect-timeout', '3', '--max-time', '5',
-                       'https://www.google.com']
-                result = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
-                if result.stdout.strip() in ['204', '200']:
-                    results["direct"]["success"] = True
-                    results["direct"]["time"] = time.time() - start_time
-                    
-                    # Получаем прямой IP
-                    try:
-                        cmd = ['curl', '-s', 'https://api.ipify.org']
-                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
-                        if result.returncode == 0:
-                            results["direct"]["ip"] = result.stdout.strip()
-                    except:
-                        pass
-            except:
-                pass
-            
-            # 4. Тест скорости (скачивание небольшого файла)
-            if results["proxied"]["success"]:
-                try:
-                    speed_test_url = "https://speed.cloudflare.com/__down?bytes=500000"
-                    
-                    start_time = time.time()
-                    cmd = [
-                        'curl', '-s', '-o', '/dev/null',
-                        '--socks5-hostname', socks5_proxy,
-                        '--connect-timeout', str(self.timeout),
-                        '--max-time', '15',
-                        speed_test_url
-                    ]
-                    result = subprocess.run(cmd, capture_output=True, timeout=20)
-                    
-                    if result.returncode == 0:
-                        elapsed = time.time() - start_time
-                        # 500KB / время в секундах = KB/s, конвертируем в kbps
-                        speed_kbps = (500 / elapsed) * 8
-                        results["proxied"]["speed"] = round(speed_kbps, 2)
-                except:
-                    pass
-            
-            # 5. Проверка стабильности (5 быстрых запросов)
-            if results["proxied"]["success"]:
-                stable_count = 0
-                total_time = 0
-                times = []
-                
-                for i in range(5):
-                    try:
-                        start_time = time.time()
-                        cmd = [
-                            'curl', '-s', '-o', '/dev/null', '-w', '%{http_code}',
-                            '--socks5-hostname', socks5_proxy,
-                            '--connect-timeout', '3',
-                            '--max-time', '5',
-                            'https://www.google.com/generate_204'
-                        ]
-                        result = subprocess.run(cmd, capture_output=True, text=True, timeout=8)
-                        
-                        if result.stdout.strip() == '204':
-                            req_time = time.time() - start_time
-                            stable_count += 1
-                            total_time += req_time
-                            times.append(req_time)
-                    except:
-                        times.append(None)
-                
-                results["stability"] = {
-                    "success_rate": f"{(stable_count * 20)}%",
-                    "success_count": stable_count,
-                    "total_requests": 5,
-                    "avg_time": round(total_time / stable_count, 3) if stable_count > 0 else 0,
-                    "min_time": round(min(times), 3) if times and any(times) else 0,
-                    "max_time": round(max(times), 3) if times and any(times) else 0,
-                    "all_times": times
+            if security == 'reality':
+                config["outbounds"][0]["streamSettings"]["realitySettings"] = {
+                    "serverName": params.get('sni', parsed['host']),
+                    "fingerprint": params.get('fp', 'chrome'),
+                    "publicKey": params.get('pbk', ''),
+                    "shortId": params.get('sid', ''),
+                    "spiderX": params.get('spx', '/')
+                }
+            elif security == 'tls':
+                config["outbounds"][0]["streamSettings"]["tlsSettings"] = {
+                    "serverName": params.get('sni', parsed['host']),
+                    "allowInsecure": True
                 }
             
-            # 6. Дополнительная информация о прокси
-            results["proxy_info"] = {
-                "host": proxy_info['host'],
-                "port": proxy_info['port'],
-                "protocol": proxy_info['params'].get('type', 'tcp'),
-                "security": proxy_info['params'].get('security', 'none'),
-                "sni": proxy_info['params'].get('sni', ''),
-                "flow": proxy_info['params'].get('flow', '')
-            }
+            if params.get('type') in ('ws', 'websocket'):
+                config["outbounds"][0]["streamSettings"]["wsSettings"] = {
+                    "path": params.get('path', '/'),
+                    "headers": {"Host": params.get('host', params.get('sni', parsed['host']))}
+                }
             
-            return results["proxied"]["success"], results["proxied"]["time"], results
+            if params.get('type') in ('grpc', 'gun'):
+                config["outbounds"][0]["streamSettings"]["grpcSettings"] = {
+                    "serviceName": params.get('servicename', params.get('service', '')),
+                    "multiMode": True
+                }
+            
+            return config
+        except Exception as e:
+            return None
+
+    def get_country_for_host(self, host, port):
+        if host in self.country_cache:
+            cached = self.country_cache[host]
+            if cached.get('country'):
+                return cached.get('country')
+        
+        country_info = get_country_info_fallback(host, port)
+        if country_info.get('country'):
+            country_code = country_info['country']
+            save_country_cache(country_info, host)
+            self.country_cache[host] = country_info
+            return country_code
+        return None
+
+    def add_country_flag_to_url(self, url, country_code, protocol, ping_ms, service_name=""):
+        try:
+            if '#' in url:
+                base = url.split("#", 1)[0]
+                existing_fragment = url.split("#", 1)[1]
+                existing_fragment = re.sub(r'^[🇷🇺🇺🇸🇩🇪🇳🇱🇬🇧🇫🇷🇨🇦🇯🇵🇸🇬🇭🇰🇫🇮🇸🇪🇳🇴🇩🇰🇵🇱🇨🇿🇦🇹🇨🇭🇧🇪🇮🇹🇪🇸🇵🇹🇦🇺🇧🇷🇮🇳🇰🇷🇨🇳🇹🇼🇺🇦🇰🇿🇧🇾🇹🇷🇮🇱🇦🇪🇸🇦🇪🇬]+\s*', '', existing_fragment)
+            else:
+                base = url
+                existing_fragment = ""
+            
+            if country_code:
+                flag = get_country_flag(country_code)
+                country_name = get_country_name(country_code)
+                new_fragment = f"{flag} {protocol}, {country_name} | {ping_ms:.0f}ms | {service_name} [#РКП]" if service_name else f"{flag} {protocol}, {country_name} | {ping_ms:.0f}ms [#РКП]"
+            else:
+                new_fragment = f"{protocol}, {service_name} | {ping_ms:.0f}ms [#РКП]" if service_name else f"{protocol} | {ping_ms:.0f}ms [#РКП]"
+            
+            return f"{base}#{new_fragment}"
+        except:
+            return url
+
+    def save_working_config(self, url, ping, country_code, protocol, service_name=""):
+        # Проверяем пинг
+        if ping > self.max_ping_ms:
+            print(f"\n⏱️ ПРЕВЫШЕН ПИНГ: {ping:.0f}ms > {self.max_ping_ms}ms - конфиг НЕ добавлен")
+            return False
+        
+        final_url = self.add_country_flag_to_url(url, country_code, protocol, ping, service_name)
+        
+        if final_url in self.saved_urls:
+            return False
+        
+        try:
+            with open(self.output_file, 'a', encoding='utf-8') as f:
+                f.write(final_url + '\n')
+            self.saved_urls.add(final_url)
+            print(f"\n💾 СОХРАНЕНО: {final_url[:100]}...")
+            return True
+        except Exception as e:
+            print(f"Ошибка сохранения: {e}")
+            return False
+
+    def test_with_xray(self, parsed, port, attempt=1):
+        if not self.xray_available:
+            return None
+        
+        config_file = None
+        process = None
+        
+        try:
+            config = self.create_xray_config(parsed, port)
+            if not config:
+                return None
+            
+            fd, config_file = tempfile.mkstemp(suffix='.json')
+            os.close(fd)
+            with open(config_file, 'w', encoding='utf-8') as f:
+                json.dump(config, f)
+            
+            if platform.system() == 'Windows':
+                creationflags = subprocess.CREATE_NO_WINDOW
+            else:
+                creationflags = 0
+                
+            process = subprocess.Popen(
+                [str(self.xray_path), '-c', config_file],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+                text=True,
+                creationflags=creationflags
+            )
+            
+            time.sleep(1.0)
+            
+            if process.poll() is not None:
+                return "CRASH"
+            
+            start = time.time()
+            proxies = {'http': f'socks5://127.0.0.1:{port}', 'https': f'socks5://127.0.0.1:{port}'}
+            
+            try:
+                r = requests.get(self.test_url, proxies=proxies, timeout=self.timeout)
+                if r.status_code in [200, 204]:
+                    ping = (time.time() - start) * 1000
+                    return {'working': True, 'ping': ping, 'method': 'xray'}
+                else:
+                    return "FAIL"
+            except requests.exceptions.Timeout:
+                return "TIMEOUT"
+            except requests.exceptions.ConnectionError:
+                return "CONN_ERROR"
+            except Exception:
+                return "ERROR"
             
         except Exception as e:
-            return False, 0, {"error": str(e)}
+            return "EXCEPTION"
         finally:
-            # Завершаем процесс Xray
             if process:
-                process.terminate()
-                try:
-                    process.wait(timeout=3)
-                except:
-                    process.kill()
-            
-            # Удаляем конфиг
+                try: 
+                    process.terminate()
+                    time.sleep(0.2)
+                    if process.poll() is None:
+                        process.kill()
+                except: 
+                    pass
+            if config_file and os.path.exists(config_file):
+                try: 
+                    os.remove(config_file)
+                except: 
+                    pass
+
+    def check_alternative_methods(self, parsed, url):
+        host = parsed['host']
+        port = parsed['port']
+        params = parsed['params']
+        security = params.get('security', '')
+        sni = params.get('sni', host)
+        
+        tcp_ok = check_tcp_connection(host, port, timeout=2)
+        if not tcp_ok:
+            return None
+        
+        if security in ['reality', 'tls']:
             try:
-                os.remove(config_path)
+                start = time.time()
+                context = ssl.create_default_context()
+                context.check_hostname = False
+                context.verify_mode = ssl.CERT_NONE
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(2)
+                sock.connect((host, port))
+                ssl_sock = context.wrap_socket(sock, server_hostname=sni or host)
+                ssl_sock.do_handshake()
+                version = ssl_sock.version()
+                ping = (time.time() - start) * 1000
+                ssl_sock.close()
+                sock.close()
+                if version:
+                    return {'working': True, 'ping': ping, 'method': 'tls_check'}
             except:
                 pass
-    
-    def check_proxy(self, link: str) -> Dict:
-        """Полная проверка прокси"""
-        if self.verbose:
-            print(f"\n{BLUE}{'='*60}{RESET}")
-            print(f"{CYAN}Проверка: {WHITE}{BOLD}{link[:80]}...{RESET}" if len(link) > 80 else f"{CYAN}Проверка: {WHITE}{BOLD}{link}{RESET}")
-            print(f"{BLUE}{'='*60}{RESET}")
         
-        result = {
-            'link': link,
-            'timestamp': datetime.now().isoformat(),
-            'valid_format': False,
-            'proxy_info': None,
-            'tcp_check': False,
-            'tcp_time': 0,
-            'tls_check': False,
-            'tls_time': 0,
-            'proxy_test': False,
-            'proxy_time': 0,
-            'details': {},
-            'score': 0,
-            'status': 'INVALID'
-        }
-        
-        # 1. Парсинг ссылки
-        proxy_info = self.parse_vless_link(link)
-        if not proxy_info:
-            if self.verbose:
-                print(f"{RED}✗ Неверный формат VLESS ссылки{RESET}")
-            result['error'] = "Invalid VLESS link format"
-            return result
-        
-        result['valid_format'] = True
-        result['proxy_info'] = proxy_info
-        
-        if self.verbose:
-            print(f"\n{YELLOW}Информация о прокси:{RESET}")
-            print(f"  📌 Название: {WHITE}{proxy_info['name']}{RESET}")
-            print(f"  🌍 Хост: {WHITE}{proxy_info['host']}{RESET}")
-            print(f"  🔌 Порт: {WHITE}{proxy_info['port']}{RESET}")
-            print(f"  🔑 UUID: {WHITE}{proxy_info['uuid'][:8]}...{RESET}")
-            print(f"  ⚙️  Параметры: {WHITE}{len(proxy_info['params'])} шт.{RESET}")
-        
-        # 2. TCP проверка
-        if self.verbose:
-            print(f"\n{YELLOW}Тест 1/4: TCP подключение...{RESET}", end='')
-        
-        tcp_ok, tcp_time = self.test_tcp_connect(proxy_info['host'], proxy_info['port'])
-        result['tcp_check'] = tcp_ok
-        result['tcp_time'] = tcp_time
-        
-        if self.verbose:
-            if tcp_ok:
-                print(f" {GREEN}✓ Успешно ({tcp_time*1000:.1f}ms){RESET}")
-            else:
-                print(f" {RED}✗ Не удалось{RESET}")
-        
-        # 3. TLS проверка (если применимо)
-        if proxy_info['port'] in [443, 8443, 2053, 2083, 2087, 2096, 4443, 6443, 9443]:
-            if self.verbose:
-                print(f"{YELLOW}Тест 2/4: TLS рукопожатие...{RESET}", end='')
-            
-            tls_ok, tls_time = self.test_tls_handshake(
-                proxy_info['host'], 
-                proxy_info['port'],
-                proxy_info['params'].get('sni')
-            )
-            result['tls_check'] = tls_ok
-            result['tls_time'] = tls_time
-            
-            if self.verbose:
-                if tls_ok:
-                    print(f" {GREEN}✓ Успешно ({tls_time*1000:.1f}ms){RESET}")
-                else:
-                    print(f" {RED}✗ Не удалось{RESET}")
-        else:
-            if self.verbose:
-                print(f"{YELLOW}Тест 2/4: TLS рукопожатие... {CYAN}Пропущено (не TLS порт){RESET}")
-            result['tls_check'] = None
-        
-        # 4. Реальный тест через Xray
-        if self.verbose:
-            print(f"{YELLOW}Тест 3/4: Проверка через Xray...{RESET}")
-        
-        if not self.xray_binary:
-            if self.verbose:
-                print(f"{RED}  ✗ Xray не найден, пропускаем{RESET}")
-            result['proxy_test'] = False
-            result['proxy_error'] = "Xray not found"
-        else:
-            proxy_ok, proxy_time, details = self.test_proxy_connection(proxy_info)
-            result['proxy_test'] = proxy_ok
-            result['proxy_time'] = proxy_time
-            result['details'] = details
-            
-            if self.verbose:
-                if proxy_ok:
-                    print(f"  {GREEN}✓ Прокси работает!{RESET}")
-                    print(f"    ⏱  Время отклика: {WHITE}{proxy_time*1000:.1f}ms{RESET}")
-                    
-                    if details.get("proxied", {}).get("ip"):
-                        print(f"    🌍 IP через прокси: {WHITE}{details['proxied']['ip']}{RESET}")
-                        if details['proxied'].get('country'):
-                            print(f"    🏳️  Страна: {WHITE}{details['proxied']['country']}{RESET}")
-                        if details['proxied'].get('city'):
-                            print(f"    🏙️  Город: {WHITE}{details['proxied']['city']}{RESET}")
-                        if details['proxied'].get('org'):
-                            print(f"    🏢  Провайдер: {WHITE}{details['proxied']['org']}{RESET}")
-                    
-                    if details.get("proxied", {}).get("speed", 0) > 0:
-                        speed = details['proxied']['speed']
-                        color = GREEN if speed > 1000 else YELLOW if speed > 500 else RED
-                        print(f"    ⚡ Скорость: {color}{speed} Kbps{RESET}")
-                    
-                    if details.get("stability"):
-                        print(f"    📊 Стабильность: {WHITE}{details['stability']['success_rate']}{RESET}")
-                        if details['stability'].get('avg_time'):
-                            print(f"    ⏱  Среднее время: {WHITE}{details['stability']['avg_time']*1000:.1f}ms{RESET}")
-                else:
-                    print(f"  {RED}✗ Прокси не работает{RESET}")
-                    if details.get("error"):
-                        print(f"    Ошибка: {RED}{details['error']}{RESET}")
-        
-        # 5. Без прокси для сравнения
-        if result.get('details') and result['details'].get("direct", {}).get("success"):
-            direct_time = result['details']["direct"]["time"]
-            if self.verbose:
-                print(f"\n{YELLOW}Тест 4/4: Без прокси (для сравнения):{RESET}")
-                print(f"  ⏱  Время: {WHITE}{direct_time*1000:.1f}ms{RESET}")
-            
-            if proxy_ok:
-                ratio = proxy_time / direct_time
-                if ratio < 1.5:
-                    perf = f"{GREEN}Отлично{RESET}"
-                elif ratio < 2.5:
-                    perf = f"{YELLOW}Средне{RESET}"
-                else:
-                    perf = f"{RED}Медленно{RESET}"
-                if self.verbose:
-                    print(f"  📈 Производительность: {perf} ({ratio:.1f}x медленнее)")
-        
-        # 6. Оценка
-        score = 0
-        if result['tcp_check']: score += 15
-        if result['tls_check']: score += 15
-        if result['proxy_test']: 
-            score += 40
-            # Дополнительные баллы за качество
-            if result['proxy_time'] < 1.0: score += 5
-            if result['proxy_time'] < 0.5: score += 5
-            if result['details'].get('proxied', {}).get('speed', 0) > 1000: score += 10
-            if result['details'].get('proxied', {}).get('speed', 0) > 500: score += 5
-            if result['details'].get('stability', {}).get('success_count', 0) >= 4: score += 10
-        
-        result['score'] = min(score, 100)  # Максимум 100
-        
-        if score >= 80:
-            result['status'] = 'WORKING'
-            status_color = GREEN
-        elif score >= 50:
-            result['status'] = 'QUESTIONABLE'
-            status_color = YELLOW
-        else:
-            result['status'] = 'BROKEN'
-            status_color = RED
-        
-        if self.verbose:
-            print(f"\n{BLUE}{'='*60}{RESET}")
-            print(f"ИТОГ: {status_color}{BOLD}{result['status']}{RESET} (оценка: {score}/100)")
-            print(f"{BLUE}{'='*60}{RESET}")
-        
-        return result
-    
-    def save_working_proxies_to_txt(self, filename: str = None):
-        """Сохранение только рабочих прокси (WORKING) в TXT файл"""
-        if not filename:
-            filename = self.working_txt
-        
-        # Фильтруем только WORKING прокси (исключаем BROKEN, QUESTIONABLE, ERROR, INVALID)
-        working_proxies = [
-            r for r in self.results 
-            if r.get('status') == 'WORKING' and r.get('link')
-        ]
-        
-        if working_proxies:
-            with open(filename, 'w', encoding='utf-8') as f:
-                for proxy in working_proxies:
-                    f.write(f"{proxy['link']}\n")
-            
-            print(f"{GREEN}✅ Сохранено {len(working_proxies)} рабочих прокси в {filename}{RESET}")
-        else:
-            print(f"{YELLOW}⚠ Нет рабочих прокси для сохранения{RESET}")
-    
-    def check_multiple(self, links: List[str]) -> List[Dict]:
-        """Проверка нескольких прокси"""
-        print(f"\n{BOLD}{CYAN}Проверка {len(links)} прокси...{RESET}\n")
-        
-        self.results = []
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = {executor.submit(self.check_proxy, link): link for link in links}
-            
-            for i, future in enumerate(as_completed(futures), 1):
-                try:
-                    result = future.result(timeout=60)
-                    self.results.append(result)
-                    
-                    # Прогресс
-                    status = result['status']
-                    color = GREEN if status == 'WORKING' else YELLOW if status == 'QUESTIONABLE' else RED
-                    name = result['proxy_info']['name'][:30] if result['proxy_info'] else "Unknown"
-                    print(f"[{i}/{len(links)}] {color}{status:12}{RESET} | {name} | {result['score']}/100")
-                    
-                except Exception as e:
-                    print(f"{RED}Ошибка: {e}{RESET}")
-                    self.results.append({
-                        'link': futures[future],
-                        'error': str(e),
-                        'status': 'ERROR',
-                        'score': 0
-                    })
-        
-        # Сортировка по оценке
-        self.results.sort(key=lambda x: x.get('score', 0), reverse=True)
-        
-        # Сохраняем результаты
-        self.save_results()
-        self.save_working_proxies_to_txt()  # Автоматически сохраняем рабочие прокси в TXT
-        
-        # Вывод сводки
-        self.print_summary()
-        
-        return self.results
-    
-    def check_from_file(self, filename: str) -> List[Dict]:
-        """Проверка прокси из файла"""
-        if not os.path.exists(filename):
-            print(f"{RED}Файл {filename} не найден!{RESET}")
-            return []
-        
-        links = []
-        with open(filename, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    links.append(line)
-        
-        print(f"{GREEN}Загружено {len(links)} ссылок из {filename}{RESET}")
-        return self.check_multiple(links)
-    
-    def save_results(self, filename: str = None):
-        """Сохранение результатов в JSON"""
-        if not filename:
-            filename = self.results_file
-        
-        # Подготовка данных для сохранения
-        save_data = {
-            'timestamp': datetime.now().isoformat(),
-            'total': len(self.results),
-            'working': len([r for r in self.results if r.get('status') == 'WORKING']),
-            'questionable': len([r for r in self.results if r.get('status') == 'QUESTIONABLE']),
-            'broken': len([r for r in self.results if r.get('status') == 'BROKEN']),
-            'errors': len([r for r in self.results if r.get('status') == 'ERROR']),
-            'results': self.results
-        }
-        
-        with open(filename, 'w', encoding='utf-8') as f:
-            json.dump(save_data, f, indent=2, ensure_ascii=False)
-        
-        print(f"\n{GREEN}✅ Результаты сохранены в {filename}{RESET}")
-        return filename
-    
-    def load_results(self, filename: str) -> List[Dict]:
-        """Загрузка результатов из JSON"""
-        try:
-            with open(filename, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self.results = data.get('results', [])
-                print(f"{GREEN}Загружено {len(self.results)} результатов из {filename}{RESET}")
-                return self.results
-        except Exception as e:
-            print(f"{RED}Ошибка загрузки {filename}: {e}{RESET}")
-            return []
-    
-    def print_summary(self):
-        """Вывод сводки по результатам"""
-        working = [r for r in self.results if r.get('status') == 'WORKING']
-        questionable = [r for r in self.results if r.get('status') == 'QUESTIONABLE']
-        broken = [r for r in self.results if r.get('status') == 'BROKEN']
-        errors = [r for r in self.results if r.get('status') == 'ERROR']
-        
-        print(f"\n{CYAN}{'='*60}{RESET}")
-        print(f"{BOLD}СВОДКА ПО ВСЕМ ПРОКСИ:{RESET}")
-        print(f"{CYAN}{'='*60}{RESET}")
-        print(f"✅ Рабочие:     {GREEN}{len(working):3}{RESET}")
-        print(f"⚠️  Сомнительные: {YELLOW}{len(questionable):3}{RESET}")
-        print(f"❌ Нерабочие:   {RED}{len(broken):3}{RESET}")
-        print(f"💥 Ошибки:      {RED}{len(errors):3}{RESET}")
-        print(f"{CYAN}{'='*60}{RESET}")
-        
-        # Топ 10 лучших
-        if working:
-            print(f"\n{GREEN}🏆 ТОП-5 ЛУЧШИХ ПРОКСИ:{RESET}")
-            for i, r in enumerate(working[:5], 1):
-                name = r['proxy_info']['name'][:40] if r.get('proxy_info') else "Unknown"
-                speed = r.get('details', {}).get('proxied', {}).get('speed', 0)
-                ping = r.get('proxy_time', 0) * 1000
-                country = r.get('details', {}).get('proxied', {}).get('country', '??')
-                print(f"  {i}. {name[:40]} | {country} | {ping:.0f}ms | {speed:.0f}Kbps | {r['score']}/100")
-        
-        # Худшие
-        if broken:
-            print(f"\n{RED}💔 ХУДШИЕ ПРОКСИ:{RESET}")
-            for i, r in enumerate(broken[:3], 1):
-                name = r['proxy_info']['name'][:40] if r.get('proxy_info') else "Unknown"
-                print(f"  {i}. {name[:40]} | {r['score']}/100")
-    
-    def generate_html_report(self, filename: str = None) -> str:
-        """Генерация красивого HTML отчета"""
-        if not filename:
-            filename = self.html_report
-        
-        working = [r for r in self.results if r.get('status') == 'WORKING']
-        questionable = [r for r in self.results if r.get('status') == 'QUESTIONABLE']
-        broken = [r for r in self.results if r.get('status') == 'BROKEN']
-        errors = [r for r in self.results if r.get('status') == 'ERROR']
-        
-        # Статистика по странам
-        countries = {}
-        for r in working + questionable:
-            country = r.get('details', {}).get('proxied', {}).get('country', 'Unknown')
-            if country not in countries:
-                countries[country] = 0
-            countries[country] += 1
-        
-        countries_html = ""
-        for country, count in sorted(countries.items(), key=lambda x: x[1], reverse=True)[:10]:
-            countries_html += f"<li>{country}: {count} прокси</li>"
-        
-        # Генерация HTML
-        html = f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xray Proxy Check Report</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        body {{
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 1400px;
-            margin: 0 auto;
-        }}
-        .header {{
-            background: rgba(255,255,255,0.95);
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-        }}
-        .header h1 {{
-            color: #333;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }}
-        .header p {{
-            color: #666;
-            font-size: 16px;
-        }}
-        .stats-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }}
-        .stat-card {{
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s;
-        }}
-        .stat-card:hover {{
-            transform: translateY(-5px);
-        }}
-        .stat-card.working {{
-            border-left: 5px solid #4caf50;
-        }}
-        .stat-card.questionable {{
-            border-left: 5px solid #ff9800;
-        }}
-        .stat-card.broken {{
-            border-left: 5px solid #f44336;
-        }}
-        .stat-card.errors {{
-            border-left: 5px solid #9c27b0;
-        }}
-        .stat-value {{
-            font-size: 48px;
-            font-weight: bold;
-            margin: 10px 0;
-        }}
-        .stat-label {{
-            color: #666;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }}
-        .filters {{
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }}
-        .filter-btn {{
-            padding: 10px 20px;
-            margin-right: 10px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s;
-        }}
-        .filter-btn:hover {{
-            opacity: 0.8;
-        }}
-        .filter-btn.active {{
-            transform: scale(1.05);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }}
-        .proxy-grid {{
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 20px;
-        }}
-        .proxy-card {{
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            border-left: 5px solid #ddd;
-        }}
-        .proxy-card.working {{
-            border-left-color: #4caf50;
-        }}
-        .proxy-card.questionable {{
-            border-left-color: #ff9800;
-        }}
-        .proxy-card.broken {{
-            border-left-color: #f44336;
-        }}
-        .proxy-header {{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }}
-        .proxy-name {{
-            font-size: 16px;
-            font-weight: bold;
-            color: #333;
-        }}
-        .proxy-score {{
-            font-size: 20px;
-            font-weight: bold;
-        }}
-        .proxy-details {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 15px;
-            font-size: 13px;
-        }}
-        .detail-item {{
-            color: #666;
-        }}
-        .detail-label {{
-            color: #999;
-            font-size: 11px;
-            text-transform: uppercase;
-        }}
-        .badge {{
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 3px;
-            color: white;
-            font-size: 11px;
-            font-weight: bold;
-        }}
-        .badge-working {{
-            background: #4caf50;
-        }}
-        .badge-questionable {{
-            background: #ff9800;
-        }}
-        .badge-broken {{
-            background: #f44336;
-        }}
-        .chart-container {{
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-        }}
-        .progress-bar {{
-            width: 100%;
-            height: 30px;
-            background: #f0f0f0;
-            border-radius: 15px;
-            overflow: hidden;
-            margin: 10px 0;
-        }}
-        .progress-fill {{
-            height: 100%;
-            transition: width 0.5s;
-        }}
-        .footer {{
-            text-align: center;
-            margin-top: 30px;
-            color: rgba(255,255,255,0.8);
-        }}
-        @media (max-width: 768px) {{
-            .proxy-grid {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Xray Proxy Check Report</h1>
-            <p>Сгенерировано: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
-            <p>Всего проверено: {len(self.results)} прокси</p>
-        </div>
-        
-        <div class="stats-grid">
-            <div class="stat-card working">
-                <div class="stat-label">✅ Рабочие</div>
-                <div class="stat-value">{len(working)}</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {len(working)/len(self.results)*100 if self.results else 0}%; background: #4caf50;"></div>
-                </div>
-            </div>
-            <div class="stat-card questionable">
-                <div class="stat-label">⚠️ Сомнительные</div>
-                <div class="stat-value">{len(questionable)}</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {len(questionable)/len(self.results)*100 if self.results else 0}%; background: #ff9800;"></div>
-                </div>
-            </div>
-            <div class="stat-card broken">
-                <div class="stat-label">❌ Нерабочие</div>
-                <div class="stat-value">{len(broken)}</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {len(broken)/len(self.results)*100 if self.results else 0}%; background: #f44336;"></div>
-                </div>
-            </div>
-            <div class="stat-card errors">
-                <div class="stat-label">💥 Ошибки</div>
-                <div class="stat-value">{len(errors)}</div>
-                <div class="progress-bar">
-                    <div class="progress-fill" style="width: {len(errors)/len(self.results)*100 if self.results else 0}%; background: #9c27b0;"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <h3>🌍 Распределение по странам</h3>
-            <ul>
-                {countries_html}
-            </ul>
-        </div>
-        
-        <div class="filters">
-            <button class="filter-btn" onclick="filterProxies('all')" style="background: #4caf50; color: white;">Все</button>
-            <button class="filter-btn" onclick="filterProxies('working')" style="background: #4caf50; color: white;">Рабочие</button>
-            <button class="filter-btn" onclick="filterProxies('questionable')" style="background: #ff9800; color: white;">Сомнительные</button>
-            <button class="filter-btn" onclick="filterProxies('broken')" style="background: #f44336; color: white;">Нерабочие</button>
-        </div>
-        
-        <div class="proxy-grid" id="proxyGrid">
-"""
-        
-        for result in self.results:
-            if result.get('status') == 'WORKING':
-                card_class = "working"
-                badge_class = "badge-working"
-                badge_text = "РАБОЧИЙ"
-            elif result.get('status') == 'QUESTIONABLE':
-                card_class = "questionable"
-                badge_class = "badge-questionable"
-                badge_text = "СОМНИТЕЛЬНЫЙ"
-            elif result.get('status') == 'BROKEN':
-                card_class = "broken"
-                badge_class = "badge-broken"
-                badge_text = "НЕРАБОЧИЙ"
-            else:
-                card_class = "broken"
-                badge_class = "badge-broken"
-                badge_text = "ОШИБКА"
-            
-            proxy_info = result.get('proxy_info', {})
-            details = result.get('details', {})
-            proxied = details.get('proxied', {})
-            
-            name = proxy_info.get('name', 'Unknown')[:40]
-            host = proxy_info.get('host', 'N/A')
-            port = proxy_info.get('port', 'N/A')
-            score = result.get('score', 0)
-            
-            ping = result.get('proxy_time', 0) * 1000
-            speed = proxied.get('speed', 0)
-            country = proxied.get('country', 'N/A')
-            ip = proxied.get('ip', 'N/A')
-            city = proxied.get('city', '')
-            org = proxied.get('org', 'N/A')[:30]
-            
-            stability = details.get('stability', {})
-            success_rate = stability.get('success_rate', 'N/A')
-            
-            html += f"""
-            <div class="proxy-card {card_class}" data-status="{result.get('status', 'UNKNOWN')}">
-                <div class="proxy-header">
-                    <span class="proxy-name">{name}</span>
-                    <span class="badge {badge_class}">{badge_text}</span>
-                </div>
-                <div style="font-size: 24px; font-weight: bold; margin: 10px 0;">{score}/100</div>
-                <div class="proxy-details">
-                    <div>
-                        <div class="detail-label">Хост</div>
-                        <div class="detail-item">{host}:{port}</div>
-                    </div>
-                    <div>
-                        <div class="detail-label">Пинг</div>
-                        <div class="detail-item">{ping:.0f}ms</div>
-                    </div>
-                    <div>
-                        <div class="detail-label">Скорость</div>
-                        <div class="detail-item">{speed:.0f} Kbps</div>
-                    </div>
-                    <div>
-                        <div class="detail-label">Страна</div>
-                        <div class="detail-item">{country}</div>
-                    </div>
-                    <div>
-                        <div class="detail-label">IP</div>
-                        <div class="detail-item">{ip}</div>
-                    </div>
-                    <div>
-                        <div class="detail-label">Стабильность</div>
-                        <div class="detail-item">{success_rate}</div>
-                    </div>
-                </div>
-                <div style="margin-top: 10px; font-size: 11px; color: #999;">
-                    {city} | {org}
-                </div>
-            </div>
-            """
-        
-        html += f"""
-        </div>
-        
-        <div class="footer">
-            <p>Xray Proxy Checker v2.0 | Сгенерировано автоматически</p>
-        </div>
-    </div>
-    
-    <script>
-        function filterProxies(status) {{
-            const cards = document.querySelectorAll('.proxy-card');
-            cards.forEach(card => {{
-                if (status === 'all') {{
-                    card.style.display = 'block';
-                }} else {{
-                    const cardStatus = card.dataset.status.toLowerCase();
-                    if (cardStatus === status) {{
-                        card.style.display = 'block';
-                    }} else {{
-                        card.style.display = 'none';
-                    }}
-                }}
-            }});
-            
-            // Обновление активной кнопки
-            document.querySelectorAll('.filter-btn').forEach(btn => {{
-                btn.classList.remove('active');
-            }});
-            event.target.classList.add('active');
-        }}
-    </script>
-</body>
-</html>
-        """
-        
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(html)
-        
-        print(f"{GREEN}✅ HTML отчет сохранен в {filename}{RESET}")
-        return filename
-    
-    def get_working_links(self, min_score: int = 80) -> List[str]:
-        """Получение списка рабочих ссылок"""
-        return [
-            r['link'] for r in self.results 
-            if r.get('score', 0) >= min_score and r.get('status') == 'WORKING'
-        ]
-    
-    def get_fastest_links(self, limit: int = 10) -> List[Dict]:
-        """Получение самых быстрых прокси"""
-        working = [r for r in self.results if r.get('status') == 'WORKING' and r.get('proxy_time', 999) > 0]
-        return sorted(working, key=lambda x: x.get('proxy_time', 999))[:limit]
-    
-    def get_by_country(self, country_code: str) -> List[Dict]:
-        """Получение прокси по стране"""
-        return [
-            r for r in self.results 
-            if r.get('details', {}).get('proxied', {}).get('country') == country_code
-        ]
-    
-    def cleanup(self):
-        """Очистка временных файлов"""
-        import shutil
-        try:
-            shutil.rmtree(self.temp_dir)
-            if self.verbose:
-                print(f"{GREEN}✓ Временные файлы удалены{RESET}")
-        except:
-            pass
+        return None
 
-def scan_vpn_config_folder(folder_path: str = "/mnt/extra/vpn/config") -> List[str]:
-    """
-    Сканирование папки с конфигами VPN и извлечение VLESS ссылок из всех файлов
-    """
-    all_links = []
-    
-    if not os.path.exists(folder_path):
-        print(f"{YELLOW}Папка {folder_path} не найдена{RESET}")
-        return all_links
-    
-    print(f"{CYAN}Сканирование папки {folder_path}...{RESET}")
-    
-    # Рекурсивно обходим все файлы в папке
-    for root, dirs, files in os.walk(folder_path):
-        for file in files:
-            file_path = os.path.join(root, file)
-            
-            # Пропускаем бинарные файлы и слишком большие
-            if os.path.getsize(file_path) > 1024 * 1024:  # > 1MB
-                continue
-            
+    def test_one(self, url, progress=None):
+        parsed = self.parse_vless_url(url)
+        if not parsed:
+            if progress:
+                progress.update('❌ парсинг', working=False)
+            return None
+        
+        protocol = detect_protocol(url)
+        domains = extract_all_possible_domains(url)
+        service_name = "Неизвестно"
+        if domains:
+            for domain in domains:
+                name = get_human_name(domain)
+                if name != "Неизвестно":
+                    service_name = name
+                    break
+        
+        port = self.port_manager.get_port()
+        if port:
             try:
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    content = f.read()
+                for attempt in range(1, self.max_retries + 1):
+                    result = self.test_with_xray(parsed, port, attempt)
                     
-                    # Ищем VLESS ссылки в тексте
-                    vless_links = re.findall(r'vless://[^\s"\'<>]+', content)
-                    
-                    if vless_links:
-                        print(f"  {GREEN}✓ Найдено {len(vless_links)} ссылок в {file_path}{RESET}")
-                        all_links.extend(vless_links)
-            except Exception as e:
-                if args.verbose:
-                    print(f"  {RED}Ошибка чтения {file_path}: {e}{RESET}")
-                continue
-    
-    # Удаляем дубликаты, сохраняя порядок
-    seen = set()
-    unique_links = []
-    for link in all_links:
-        if link not in seen:
-            seen.add(link)
-            unique_links.append(link)
-    
-    print(f"\n{GREEN}Всего найдено уникальных ссылок: {len(unique_links)}{RESET}")
-    return unique_links
-
-def print_banner():
-    """Вывод баннера"""
-    banner = f"""
-{CYAN}{BOLD}
-╔══════════════════════════════════════════════════════════════╗
-║              XRAY VLESS PROXY CHECKER v2.0                   ║
-║     Тщательная проверка прокси + отчеты + мониторинг         ║
-╚══════════════════════════════════════════════════════════════╝
-{RESET}
-"""
-    print(banner)
-
-def main():
-    """Основная функция"""
-    parser = argparse.ArgumentParser(description='Xray VLESS Proxy Checker')
-    parser.add_argument('links', nargs='*', help='VLESS ссылки для проверки')
-    parser.add_argument('-f', '--file', help='Файл со ссылками (по одной на строку)')
-    parser.add_argument('--scan-folder', action='store_true', help='Сканировать папку /mnt/extra/vpn/config')
-    parser.add_argument('--scan-path', help='Сканировать указанную папку (вместо стандартной)')
-    parser.add_argument('-o', '--output', help='Выходной JSON файл')
-    parser.add_argument('--html', help='HTML отчет файл')
-    parser.add_argument('--working-txt', help='TXT файл для рабочих прокси (по умолчанию working_proxies_ДатаВремя.txt)')
-    parser.add_argument('-v', '--verbose', action='store_true', help='Подробный вывод')
-    parser.add_argument('-t', '--timeout', type=int, default=10, help='Таймаут в секундах')
-    parser.add_argument('-w', '--workers', type=int, default=3, help='Количество параллельных проверок')
-    parser.add_argument('--min-score', type=int, default=80, help='Минимальный балл для рабочего прокси')
-    parser.add_argument('--export-working', help='Экспортировать только рабочие ссылки в файл')
-    parser.add_argument('--stats', action='store_true', help='Показать статистику по последней проверке')
-    parser.add_argument('--monitor', help='Режим мониторинга (интервал в минутах)')
-    
-    global args
-    args = parser.parse_args()
-    
-    print_banner()
-    
-    # Проверка наличия curl
-    try:
-        subprocess.run(['curl', '--version'], capture_output=True, check=True)
-    except:
-        print(f"{RED}ОШИБКА: curl не найден. Установите curl:{RESET}")
-        print("  Ubuntu/Debian: sudo apt install curl")
-        print("  CentOS/RHEL: sudo yum install curl")
-        print("  macOS: brew install curl")
-        sys.exit(1)
-    
-    checker = VlessProxyChecker(
-        verbose=args.verbose,
-        timeout=args.timeout,
-        max_workers=args.workers
-    )
-    
-    try:
-        # Определяем источник ссылок
-        links_to_check = []
-        
-        if args.scan_folder:
-            # Сканируем стандартную папку
-            links_to_check = scan_vpn_config_folder()
-        elif args.scan_path:
-            # Сканируем указанную папку
-            links_to_check = scan_vpn_config_folder(args.scan_path)
-        elif args.file:
-            # Загружаем из файла
-            if os.path.exists(args.file):
-                with open(args.file, 'r', encoding='utf-8') as f:
-                    links_to_check = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-                print(f"{GREEN}Загружено {len(links_to_check)} ссылок из {args.file}{RESET}")
-            else:
-                print(f"{RED}Файл {args.file} не найден!{RESET}")
-                return
-        elif args.links:
-            # Используем ссылки из аргументов командной строки
-            links_to_check = args.links
-        elif args.monitor:
-            # В режиме мониторинга нужно знать что проверять
-            print(f"{YELLOW}Для режима мониторинга укажите источник ссылок (--file или --scan-folder){RESET}")
-            return
-        elif args.stats:
-            # Просто показать статистику
-            latest_json = max(Path('.').glob('proxy_check_*.json'), key=os.path.getctime)
-            if latest_json:
-                checker.load_results(str(latest_json))
-                checker.print_summary()
-            else:
-                print(f"{RED}Нет сохраненных результатов{RESET}")
-            return
-        else:
-            # Интерактивный режим - сначала спросим про сканирование папки
-            print(f"{YELLOW}Выберите источник ссылок:{RESET}")
-            print(f"  1) {CYAN}Сканировать папку /mnt/extra/vpn/config{RESET}")
-            print(f"  2) {CYAN}Указать путь к папке{RESET}")
-            print(f"  3) {CYAN}Загрузить из файла{RESET}")
-            print(f"  4) {CYAN}Ввести ссылки вручную{RESET}")
-            
-            choice = input(f"\n{BOLD}Ваш выбор (1-4): {RESET}").strip()
-            
-            if choice == '1':
-                links_to_check = scan_vpn_config_folder()
-            elif choice == '2':
-                folder_path = input(f"{YELLOW}Введите путь к папке: {RESET}").strip()
-                if folder_path:
-                    links_to_check = scan_vpn_config_folder(folder_path)
-                else:
-                    print(f"{RED}Путь не указан{RESET}")
-                    return
-            elif choice == '3':
-                file_path = input(f"{YELLOW}Введите путь к файлу: {RESET}").strip()
-                if os.path.exists(file_path):
-                    with open(file_path, 'r', encoding='utf-8') as f:
-                        links_to_check = [line.strip() for line in f if line.strip() and not line.startswith('#')]
-                    print(f"{GREEN}Загружено {len(links_to_check)} ссылок из {file_path}{RESET}")
-                else:
-                    print(f"{RED}Файл {file_path} не найден!{RESET}")
-                    return
-            elif choice == '4':
-                print(f"{YELLOW}Введите VLESS ссылки для проверки (по одной на строку):{RESET}")
-                print(f"{CYAN}Для завершения ввода введите пустую строку или 'q'{RESET}\n")
-                
-                links_to_check = []
-                while True:
-                    try:
-                        line = input(f"{BOLD}> {RESET}").strip()
-                        if not line or line.lower() == 'q':
-                            break
-                        if line.startswith('vless://'):
-                            links_to_check.append(line)
+                    if isinstance(result, dict) and result.get('working'):
+                        ping = result.get('ping', 0)
+                        print(f"\n✅ РАБОТАЕТ: {parsed['host']} | Пинг: {ping:.0f}ms")
+                        
+                        if ping > self.max_ping_ms:
+                            print(f"   ⏱️ Пинг {ping:.0f}ms превышает лимит {self.max_ping_ms}ms - пропускаем")
+                            if progress:
+                                progress.update('⏱️ пинг', working=False, rejected=True)
+                            self.port_manager.release_port(port)
+                            return None
+                        
+                        country_code = self.get_country_for_host(parsed['host'], parsed['port'])
+                        if country_code:
+                            print(f"   🌍 Страна: {get_country_name(country_code)} ({country_code})")
                         else:
-                            print(f"{RED}Не VLESS ссылка, пропущено{RESET}")
-                    except KeyboardInterrupt:
-                        print(f"\n{YELLOW}Прервано пользователем{RESET}")
-                        break
-            else:
-                print(f"{RED}Неверный выбор{RESET}")
-                return
-        
-        # Проверяем ссылки
-        if links_to_check:
-            if args.monitor:
-                # Режим мониторинга
-                interval = int(args.monitor) * 60
-                print(f"{CYAN}Режим мониторинга запущен (интервал {args.monitor} мин){RESET}")
-                
-                while True:
-                    print(f"\n{YELLOW}{'='*60}{RESET}")
-                    print(f"{YELLOW}Проверка {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}{RESET}")
-                    print(f"{YELLOW}{'='*60}{RESET}")
+                            print(f"   🌍 Страна: не определена")
+                        
+                        saved = self.save_working_config(url, ping, country_code, protocol, service_name)
+                        if saved:
+                            print(f"   💾 Конфиг сохранен в {self.output_file}")
+                        else:
+                            if ping <= self.max_ping_ms:
+                                print(f"   ⚠️ Конфиг уже существует в {self.output_file}")
+                        
+                        self.port_manager.release_port(port)
+                        if progress:
+                            progress.update('✅', working=True)
+                        return {'url': url, 'ping': ping, 'method': 'xray', 'country': country_code}
                     
-                    checker.check_multiple(links_to_check)
+                    elif result in ["TIMEOUT", "FAIL", "CONN_ERROR", "CRASH"]:
+                        if attempt < self.max_retries:
+                            time.sleep(self.retry_delay)
+                            continue
                     
-                    # Сохраняем отчет с меткой времени
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    checker.save_results(f"monitor_{timestamp}.json")
-                    checker.generate_html_report(f"monitor_{timestamp}.html")
-                    
-                    # Сохраняем рабочие прокси
-                    if args.working_txt:
-                        working_filename = f"monitor_working_{timestamp}.txt"
                     else:
-                        working_filename = f"monitor_working_{timestamp}.txt"
-                    checker.save_working_proxies_to_txt(working_filename)
-                    
-                    print(f"\n{CYAN}Следующая проверка через {args.monitor} мин...{RESET}")
-                    time.sleep(interval)
+                        break
+                
+                self.port_manager.release_port(port)
+            except:
+                self.port_manager.release_port(port)
+        
+        # Альтернативная проверка
+        alt_result = self.check_alternative_methods(parsed, url)
+        if alt_result and alt_result.get('working'):
+            ping = alt_result.get('ping', 100)
+            print(f"\n✅ РАБОТАЕТ (TLS): {parsed['host']} | Пинг: {ping:.0f}ms")
+            
+            if ping > self.max_ping_ms:
+                print(f"   ⏱️ Пинг {ping:.0f}ms превышает лимит {self.max_ping_ms}ms - пропускаем")
+                if progress:
+                    progress.update('⏱️ пинг', working=False, rejected=True)
+                return None
+            
+            country_code = self.get_country_for_host(parsed['host'], parsed['port'])
+            if country_code:
+                print(f"   🌍 Страна: {get_country_name(country_code)} ({country_code})")
+            
+            saved = self.save_working_config(url, ping, country_code, protocol, service_name)
+            if saved:
+                print(f"   💾 Конфиг сохранен в {self.output_file}")
             else:
-                # Обычный режим проверки
-                checker.check_multiple(links_to_check)
-                
-                if args.output:
-                    checker.save_results(args.output)
-                else:
-                    checker.save_results()
-                
-                if args.html:
-                    checker.generate_html_report(args.html)
-                else:
-                    checker.generate_html_report()
-                
-                # Сохраняем рабочие прокси в TXT
-                if args.working_txt:
-                    checker.save_working_proxies_to_txt(args.working_txt)
-                else:
-                    checker.save_working_proxies_to_txt()
-                
-                if args.export_working:
-                    working = checker.get_working_links(args.min_score)
-                    with open(args.export_working, 'w', encoding='utf-8') as f:
-                        for link in working:
-                            f.write(f"{link}\n")
-                    print(f"{GREEN}✅ Экспортировано {len(working)} рабочих ссылок в {args.export_working}{RESET}")
-        else:
-            print(f"{YELLOW}Нет ссылок для проверки{RESET}")
+                if ping <= self.max_ping_ms:
+                    print(f"   ⚠️ Конфиг уже существует в {self.output_file}")
+            
+            if progress:
+                progress.update('✅', working=True)
+            return {'url': url, 'ping': ping, 'method': 'tls_check', 'country': country_code}
+        
+        if progress:
+            progress.update('❌', working=False)
+        return None
+
+    def test_all(self):
+        if not os.path.exists(self.input_file):
+            print(f"\n❌ Нет файла {self.input_file}")
+            return
+        
+        try:
+            with open(self.input_file, 'r', encoding='utf-8') as f:
+                all_urls = [line.strip() for line in f if line.strip()]
+        except:
+            print(f"❌ Ошибка чтения файла {self.input_file}")
+            return
+        
+        if not all_urls:
+            print(f"\n📭 Нет конфигов для тестирования")
+            return
+        
+        print(f"\n{'='*60}")
+        print(f"🔍 Тестирование {len(all_urls)} конфигов")
+        print(f"⚡ Потоков: {self.max_workers}")
+        print(f"⏱️ Таймаут: {self.timeout}с")
+        print(f"📏 Максимальный пинг: {self.max_ping_ms}ms")
+        print(f"📁 Результаты сохраняются в: {self.output_file}")
+        print('='*60)
+        
+        if os.path.exists(self.debug_file):
+            os.remove(self.debug_file)
+        
+        working = []
+        progress = SimpleProgress(len(all_urls))
+        
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            futures = {executor.submit(self.test_one, url, progress): url for url in all_urls}
+            for future in as_completed(futures):
+                try:
+                    result = future.result(timeout=self.timeout + 5)
+                    if result:
+                        working.append(result)
+                except Exception as e:
+                    progress.update('⚠️', working=False)
+        
+        progress.finish()
+        
+        # Сортировка по пингу
+        working.sort(key=lambda x: x['ping'])
+        
+        print(f"\n📊 Результаты:")
+        print(f"   ✅ Работает и добавлено: {len(working)}")
+        print(f"   📁 Всего сохранено в {self.output_file}: {len(self.saved_urls)} уникальных конфигов")
+        print(f"   📏 Максимальный пинг: {self.max_ping_ms}ms")
+        
+        if working:
+            print(f"\n📈 Топ-5 по пингу:")
+            for i, w in enumerate(working[:5], 1):
+                print(f"   {i}. {w['ping']:.0f}ms - {w.get('method', 'unknown')}")
+        
+        print('='*60 + '\n')
+        
+        return working
+
+    def run(self):
+        self.test_all()
+
+# ========= ОСНОВНОЙ ЦИКЛ =========
+async def main_cycle():
+    global cycle_counter
+    cycle_counter += 1
+    print(f"\n{'='*60}")
+    print(f"=== НОВЫЙ ЦИКЛ #{cycle_counter} ===")
+    print(f"{'='*60}")
     
-    except KeyboardInterrupt:
-        print(f"\n{YELLOW}Программа прервана{RESET}")
-    except Exception as e:
-        print(f"{RED}Критическая ошибка: {e}{RESET}")
-        import traceback
-        traceback.print_exc()
-    finally:
-        checker.cleanup()
+    if cycle_counter % CYCLES_BEFORE_DEBUG_CLEAN == 0:
+        if os.path.exists(DEBUG_FILE):
+            os.remove(DEBUG_FILE)
+            print(f"🧹 Очищен {DEBUG_FILE} после {cycle_counter} циклов")
+    
+    if os.path.exists(OUTPUT_FILE):
+        os.remove(OUTPUT_FILE)
+    
+    if not os.path.exists(SOURCES_FILE):
+        print(f"❌ Нет файла {SOURCES_FILE}")
+        return
+    
+    try:
+        with open(SOURCES_FILE, "r", encoding="utf-8", errors="ignore") as f:
+            urls = [line.strip() for line in f if line.strip()]
+    except:
+        print(f"❌ Ошибка чтения {SOURCES_FILE}")
+        return
+    
+    if not urls:
+        print("⚠️ Нет URL для скачивания")
+        return
+    
+    print(f"📥 Загружаю {len(urls)} источников...")
+    
+    sem = asyncio.Semaphore(THREADS_DOWNLOAD)
+    output_lock = asyncio.Lock()
+    stats = {"processed": 0, "found": 0}
+    
+    async with aiohttp.ClientSession() as session:
+        tasks = [process_url(session, url, sem, output_lock, stats) for url in urls]
+        await asyncio.gather(*tasks)
+    
+    print(f"\n✅ Скачивание завершено. Найдено VLESS: {stats['found']}")
+    await log(f"Скачивание завершено. Найдено VLESS: {stats['found']}")
+    
+    if stats['found'] > 0:
+        await clean_vless()
+        await filter_vless()
+        await rename_configs()
+        await encode_all_configs()
+        
+        print("\n=== ЗАПУСК Xray ПРОВЕРКИ ===")
+        print(f"✅ Рабочие конфиги с пингом до {MAX_PING_MS}ms будут сохраняться в {WORK_FILE}")
+        
+        tester = XrayTester(
+            input_file=ENCODED_FILE, 
+            output_file=WORK_FILE, 
+            max_workers=XRAY_MAX_WORKERS,
+            max_ping_ms=MAX_PING_MS
+        )
+        
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, tester.run)
+        
+        if os.path.exists(WORK_FILE):
+            with open(WORK_FILE, 'r', encoding='utf-8') as f:
+                total_working = sum(1 for line in f if line.strip())
+            print(f"\n📊 ИТОГО РАБОЧИХ КОНФИГОВ В {WORK_FILE}: {total_working}")
+    else:
+        print("⏭️ Нет новых конфигов для обработки")
+
+async def run_forever():
+    print("\n🔄 Запуск бесконечного цикла...")
+    print(f"⏱️ Каждый час будет выполняться проверка и добавление новых конфигов")
+    print(f"📏 Максимальный пинг: {MAX_PING_MS}ms (конфиги с большим пингом НЕ сохраняются)")
+    while True:
+        try:
+            cycle_start = time.time()
+            await main_cycle()
+            cycle_time = time.time() - cycle_start
+            print(f"✅ Цикл завершен за {cycle_time:.1f}с")
+            print(f"⏳ Ожидание {CYCLE_DELAY//3600} час до следующего цикла...")
+            await asyncio.sleep(CYCLE_DELAY)
+        except KeyboardInterrupt:
+            print("\n👋 Остановка по запросу пользователя")
+            break
+        except Exception as e:
+            print(f"\n❌ Ошибка в цикле: {e}")
+            print(f"⏳ Ожидание 60 секунд перед перезапуском...")
+            await asyncio.sleep(60)
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(run_forever())
+    except KeyboardInterrupt:
+        print("\n👋 Программа остановлена")
+    except Exception as e:
+        print(f"\n❌ Критическая ошибка: {e}")
+        import traceback
+        traceback.print_exc()
