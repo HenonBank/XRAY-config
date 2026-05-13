@@ -1,0 +1,5 @@
+# VLESS Configs - UZ 🇺🇿
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 1 / Всего: 1
+
+vless://5820fa47-3140-45f8-cdf0-d3e71cfe8cc5@104.24.191.39:2083?type=ws&path=/online-store-shoes/&host=dev-cloud-srv01.cyberscaler.com&security=tls&allowInsecure=1&fp=chrome&alpn=h2,http/1.1&allowInsecure=1&sni=dev-cloud-srv01.cyberscaler.com#✓ 🇺🇿 UZ-001 [WS+TLS]

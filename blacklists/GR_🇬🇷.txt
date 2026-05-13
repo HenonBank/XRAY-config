@@ -1,0 +1,10 @@
+# VLESS Configs - GR 🇬🇷
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 6 / Всего: 57
+
+vless://bcf31ced-07e7-4bd3-ae6d-9280d9a47834@gr.nodesecure.ru:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=eh.vk.com&fp=random&pbk=kY32I2PvI5UYqhjoZlcL0z6V6r1AV_lLZolQH78ApmU&sid=ae575a16aa1a19a9&type=tcp&headerType=none#✓ 🇬🇷 GR-001 [Reality]
+vless://5574ae58-f829-4ec3-961d-22721a46d297@www.speedtest.net:80?path=/Telegram+-+@XvProxy+-+Telegram+-+@XvProxy&security=none&encryption=none&host=all1.svgspeedtest.net&type=ws#✓ 🇬🇷 GR-002 [WS]
+vless://610b4374-6c1b-43e6-ba7f-a89aba596db6@2.27.20.17:443?&security=reality&pbk=N9YEtcvbXxG2GD8cLMlQT35HnX8cmvYPasnqtcBW_XY&sid=131df166be01a436&fp=chrome&sni=vpn.xorealis.com&type=grpc&serviceName=&mode=gun#✓ 🇬🇷 GR-003 [Reality]
+vless://bf263367-bb63-4663-b4a1-34946107a72e@gr-1.illusion-proxy.ru:443?security=reality&encryption=none&pbk=I-ltGSV73Fd08VfuP_XZ-mAAb2ZE3Ag4a_8ftaX0bz0&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=gr-1.illusion-proxy.ru&sid=fe28038a#✓ 🇬🇷 GR-004 [Reality]
+vless://4c642cae-1a6d-4e51-a1c3-fa5892437aa3@38.54.29.210:2053?encryption=none&security=tls&sni=5465765525.ccfly.tech&fp=chrome&type=ws&host=5465765525.ccfly.tech&path=%2F%3Fed%3D2048#✓ 🇬🇷 GR-005 [WS+TLS]
+vless://26238b7f-502b-454c-88d6-e29fdc136796@95.164.1.6:443?mode=gun&security=tls&encryption=none&authority=&type=grpc&serviceName=vless-grpc&sni=95.164.1.6#✓ 🇬🇷 GR-006 [gRPC+TLS]

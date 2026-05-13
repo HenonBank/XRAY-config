@@ -1,0 +1,16 @@
+# VLESS Configs - TR 🇹🇷
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 12 / Всего: 12
+
+vless://fd0cdd44-2361-11f0-9970-45e1d80c4039@62.60.233.250:443?security=reality&encryption=none&pbk=MFsbnsNQsSpZwP-_Ohzako6aHpfK4-rbssxhr3eywWw&headerType=&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=images.apple.com&sid=4476a3#✅ 🇹🇷 LTE | Global 143ms | TR-001 [Reality]
+vless://1149be91-5a4f-47de-995f-66f8d7d64498@86.38.214.58:2096?security=tls&sni=De15.SiMaNsAnAt.Ir.&type=ws&host=De15.SiMaNsAnAt.Ir.#✅ 🇹🇷 Универсальный | Cloudflare 173ms | TR-002 [WS+TLS]
+vless://97b11ee6-a62a-4e60-839c-de974a155089@86.38.214.71:443?security=tls&sni=ttgju.org&type=ws&host=hj-de.ttgju.org&path=%2Fhajmi%3Fed%3D2560&alpn=http%2F1.1#✅ 🇹🇷 Универсальный | Cloudflare 192ms | TR-003 [WS+TLS]
+vless://83be74fc-2373-442e-bff9-30cae34777ae@31.210.50.51:443?path=%2FfZGxEZPSny82UpUcLlZxm&security=tls&encryption=none&host=tn2.v-mizban.info&fp=chrome&type=ws&sni=tn2.v-mizban.info#✅ 🇹🇷 Универсальный | Ultahost, 629ms | TR-004 [WS+TLS]
+vless://ac41bbc1-5f69-4aca-a295-4114b15e1b1b@86.38.214.16:80?security=none&type=ws&host=1.V2rayV2ray-_-_-V2ray.Zemestanil.Ir&path=%2F%40Proxy_MTM-%40Proxy_MTM-%40Proxy_MTM-Proxy_%40MTM%3Fed%3D2056#✅ 🇹🇷 Универсальный | Cloudflare 807ms | TR-005 [WS]
+vless://ac41bbc1-5f69-4aca-a295-4114b15e1b1b@86.38.214.22:80?security=none&type=ws&host=1.V2rayV2ray-_-_-V2ray.Zemestanil.Ir#✅ 🇹🇷 Универсальный | Cloudflare 1092ms | TR-006 [WS]
+vless://cf20441a-0ca5-4eeb-bda7-4b6cb5d8b207@tr.srv1.stafillo.com:443?security=reality&encryption=none&pbk=N5ndLLRlk4BhFYLJOdE_HDab9W0E0805KRdw0FEBjXg&headerType=none&fp=chrome&type=tcp&sni=refersion.com#✅ 🇹🇷 LTE | tr.srv1.stafillo.com 2568ms | TR-007 [Reality]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@86.38.214.29:8880?type=ws&host=hk.laoyoutiao.link&path=%2FTelegramU0001F1E8U0001F1F3%20%40MxlShare%20%40WangCai2%20%2F%3Fed%3D2560#✅ 🇹🇷 Универсальный | Cloudflare 2692ms | TR-008 [WS]
+vless://fd2bfdd2-68eb-49b0-98ad-ed82f901edde@62.60.233.178:52000?flow=xtls-rprx-vision&encryption=none&type=tcp&security=reality&sni=ozon.ru&pbk=4Fs4rORU_bK5Nwy9qvmVw3dAxS91bIG5cQYOmXl7zDA&sid=3d67b0666a5e09a0&fp=chrome#✅ 🇹🇷 LTE | Global 2846ms | TR-009 [Reality]
+vless://eae02a50-e329-4647-926e-8439e685f317@86.38.214.86:443?security=tls&sni=first.pinocchio1.ir.&type=grpc&fp=chrome&alpn=http/1.1#✅ 🇹🇷 Универсальный | Cloudflare 2997ms | TR-010 [gRPC+TLS]
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@86.38.214.238:2096?allowInsecure=1&encryption=none&host=sni.jpmj.dev&security=tls&sni=sni.jpmj.dev&type=ws#✅ 🇹🇷 Универсальный | Cloudflare 3276ms | TR-011 [WS+TLS]
+vless://583ceab3-4022-4553-9158-9bedc625ad4e@86.38.214.177:8880?security=tls#✅ 🇹🇷 Сервер | Cloudflare 3310ms | TR-012 [TLS]

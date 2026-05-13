@@ -1,0 +1,13 @@
+# VLESS Configs - NZ 🇳🇿
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 9 / Всего: 10
+
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@114.129.43.238:2096?allowInsecure=1&encryption=none&host=sni.jpmj.dev&security=tls&sni=sni.jpmj.dev&type=ws#✓ 🇳🇿 NZ-001 [WS+TLS]
+vless://39ef56cc-5cd3-4d78-f095-25b216498736@opening-hours.nz:80?flow=&type=ws&host=join-to-Vmessorg.sabadyt.ir&path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480&security=none#✓ 🇳🇿 NZ-002 [WS]
+vless://cf0e2b73-088d-4d2e-c95d-3a4002216831@opening-hours.nz:80?flow=&amp;type=ws&amp;host=join-to-Vmessorg.sabadyt.ir&amp;path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed%3D2480&amp;security=none#✓ 🇳🇿 NZ-003 [TCP]
+vless://738bafc2-3c35-4191-871b-d8c3d9b6d1fd@opening-hours.nz:80?flow=&type=ws&host=join-to-Vmessorg.sabadyt.ir&path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480&security=none#✓ 🇳🇿 NZ-004 [WS]
+vless://bbe59f7a-e4c1-4a1d-cbbf-67d44c7d7733@opening-hours.nz:80?flow=&type=ws&host=join-to-Vmessorg.sabadyt.ir&path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480&security=none#✓ 🇳🇿 NZ-005 [WS]
+vless://a34663ca-4f10-4ba5-b9fe-d81e4766cacc@opening-hours.nz:80?flow=&type=ws&host=join-to-Vmessorg.sabadyt.ir&path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480&security=none#✓ 🇳🇿 NZ-006 [WS]
+vless://52428b83-b414-4321-8aea-1bd51d68b884@opening-hours.nz:80?path=/@vmessorg----@vmessorg-----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg----@vmessorg?ed=2480&security=none&encryption=none&host=join-to-Vmessorg.sabadyt.ir&type=ws#✓ 🇳🇿 NZ-007 [WS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@114.129.43.213:8880?sni=jp.laoyoutiao.link&type=ws&host=jp.laoyoutiao.link&allowInsecure=0#✓ 🇳🇿 NZ-008 [WS]
+vless://da276b21-3d33-51f1-956f-5b93d5b946df@www.speedtest.net:443?security=tls&sni=nz-1-ssm.medicaldream.ir&allowInsecure=1&fp=chrome&type=ws&path=/vless&host=nz-1-ssm.medicaldream.ir&encryption=none#✓ 🇳🇿 NZ-009 [WS+TLS]

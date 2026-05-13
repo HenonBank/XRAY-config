@@ -1,0 +1,17 @@
+# VLESS Configs - PH 🇵🇭
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 13 / Всего: 21
+
+vless://ee2bb495-2632-445b-b1f8-3c476a50b78b@154.83.2.18:2053?path=%2F&security=tls&encryption=none&host=dl1-fr-cdn.easy-upload.org&type=ws&sni=dl1-fr-cdn.easy-upload.org#✓ 🇵🇭 PH-001 [WS+TLS]
+vless://90bf198f-9810-40c8-cb6f-8d7908b576d3@154.83.2.246:8880?security=none&type=httpupgrade&host=nufillter.jtip.sbs.&path=%2Ftelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER#✓ 🇵🇭 PH-002 [TCP]
+vless://96a1b724-68d2-4f4d-ab25-38ecd83577bc@154.83.2.235:2096?security=tls&sni=HiDyVnDe14.bInTeRmA.OrG&type=ws&host=HiDyVnDe14.bInTeRmA.OrG&path=%2F&fp=chrome&alpn=h3%2Ch2#✓ 🇵🇭 PH-003 [WS+TLS]
+vless://b99590df-eda0-4e34-e1a9-3d1118faed83@154.83.2.217:8880?security=none&type=httpupgrade&host=nufillter.jtip.sbs.&path=%2F#✓ 🇵🇭 PH-004 [TCP]
+vless://b99590df-eda0-4e34-e1a9-3d1118faed83@154.83.2.99:8880?security=none&type=httpupgrade&host=nufillter.jtip.sbs.&path=/#✓ 🇵🇭 PH-005 [TCP]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@154.83.2.131:80?security=&type=ws&path=Telegram%F0%9F%87%AE%F0%9F%87%B7Channel+id:+@ShadowProxy66+/?ed%3D2560&host=reedfree8mahsang2.redorg.ir&encryption=none#✓ 🇵🇭 PH-006 [WS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@154.83.2.29:8880?sni=hk.laoyoutiao.link&type=ws&host=hk.laoyoutiao.link&path=/TelegramU0001F1E8U0001F1F3&allowInsecure=0#✓ 🇵🇭 PH-007 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@154.83.2.254:8880?type=ws&host=yg.bantony199.top&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#✓ 🇵🇭 PH-008 [WS]
+vless://06e4425e-a8cb-4b63-929f-2105604ab0a9@8.220.134.136:443?security=tls&sni=zn.ylka.dpdns.org&type=ws&host=zn.ylka.dpdns.org&path=%2F%3Fed%3D2560#✓ 🇵🇭 PH-009 [WS+TLS]
+vless://89b3cbba-e6ac-485a-9481-976a0415eab9@154.83.2.235:80?security=none&type=ws&host=uuhUHYygEsdFGH.UYHJHGvgFcjGUJhbUIlbVFDxDxM.xyz&path=Telegram%3A%40ShadowProxy66%2F%3Fed%3D2560#✓ 🇵🇭 PH-010 [WS]
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@154.83.2.247:8880?sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=/Telegram#✓ 🇵🇭 PH-011 [WS]
+vless://b99590df-eda0-4e34-e1a9-3d1118faed83@154.83.2.7:8880?security=none&type=httpupgrade&host=nufillter.jtip.sbs.&path=/#✓ 🇵🇭 PH-012 [TCP]
+vless://90bf198f-9810-40c8-cb6f-8d7908b576d3@154.83.2.44:8880?security=none&type=httpupgrade&host=nufillter.jtip.sbs.&path=%2Ftelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER%2Ctelegram-NUFiLTER#✓ 🇵🇭 PH-013 [TCP]

@@ -1,0 +1,18 @@
+# VLESS Configs - FI 🇫🇮
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 14 / Всего: 14
+
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@65.109.200.234:443?encryption=none&security=tls&sni=sni.111000.indevs.in&fp=chrome&insecure=0&allowInsecure=0&type=ws&host=sni.111000.indevs.in&path=%2F%3Fed%3D2560#✅ 🇫🇮 Универсальный | Hetzner 128ms | FI-001 [WS+TLS]
+vless://5b77fb18-cece-4759-9a81-571f1be53e0c@91.132.142.10:443?security=reality&flow=xtls-rprx-vision&sni=vk.com&type=tcp&fp=chrome&pbk=iCY6H8CpnIfqmIkEABduJEAeJrnYS089R1-jKEyVp3w&sid=92463ae1603044#✅ 🇫🇮 LTE | WorkTitans 249ms | FI-002 [Reality]
+vless://948fac3c-42bf-41a6-a5f9-704d36ff0d8d@65.109.201.6:8443?encryption=none&security=tls&sni=snippet.sh21.eu.org&insecure=0&allowInsecure=0&type=ws&host=snippet.sh21.eu.org&path=%2Fdanfeng#✅ 🇫🇮 Универсальный | Hetzner 538ms | FI-003 [WS+TLS]
+vless://19773cc6-89a3-47c6-bc10-885460cd2b7b@89.167.17.75:443?type=tcp&security=none#✅ 🇫🇮 Сервер | Hetzner 580ms | FI-004 [TCP]
+vless://bd409992-7ae5-4c0e-baa5-c268d115e976@fi.sigmapower.org:443?encryption=none&flow=xtls-rprx-vision&fp=chrome&pbk=okOhRrlgg5P5KRzTdOVv23_ncIAL5SlNiSiQ1TZ7lmw&security=reality&sid=a8e8df4f1fb3e3f8&sni=fi.sigmapower.org&type=tcp#✅ 🇫🇮 LTE | fi.sigmapower.org 1004ms | FI-005 [Reality]
+vless://4d2e16a5-a0f8-4189-a851-5780693d71b3@45.12.146.33:443?security=reality&sni=hls-svod.itunes.apple.com&fp=chrome&pbk=mLmBhbVFfNuo2eUgBh6r9-5Koz9mUCn3aSzlR6IejUg&sid=f79448a30d&type=tcp&flow=xtls-rprx-vision&encryption=none#✅ 🇫🇮 LTE | WorkTitans 2518ms | FI-006 [Reality]
+vless://ea760105-1dce-4f5c-8f5a-233e96324155@45.15.152.167:443?type=tcp&security=reality&fp=chrome&pbk=2lReHLDD5UCpT8FyBLPyrrIbi6MNKDBTArtCwI3NUQA&sid=4b1b&sni=yahoo.com&spx=/#✅ 🇫🇮 LTE | WorkTitans 2691ms | FI-007 [Reality]
+vless://8a6d643c-39bf-4d11-998a-62e3bc9a7ba4@94.131.100.169:443?path=%2Feclbanws&security=tls&encryption=none&insecure=1&type=ws&allowInsecure=1&sni=www.vk.com#✅ 🇫🇮 Универсальный | WorkTitans 2849ms | FI-008 [WS+TLS]
+vless://9e769ce1-34be-4e3f-b0a6-823f30eb8f69@45.15.127.193:8443?path=%2F&security=tls&encryption=none&type=ws#✅ 🇫🇮 Универсальный | WorkTitans 2851ms | FI-009 [WS+TLS]
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@37.27.243.248:443?encryption=none&security=tls&sni=sni.111000.indevs.in&insecure=1&allowInsecure=1&type=ws&host=sni.111000.indevs.in&path=%2F%3Ftelegram%F0%9F%8E%96%40alixtso%3D#✅ 🇫🇮 Универсальный | Hetzner 2919ms | FI-010 [WS+TLS]
+vless://378df8e8-add6-4416-9eba-e30042fc19c8@37.27.220.157:443?security=reality&encryption=none&pbk=98o3NKmGSULn2eRsvgrWQk9blOwPAQ4Lt4YWu_R-GBk&headerType=none&fp=chrome&type=tcp&sni=www.speedtest.net&sid=cbfe#✅ 🇫🇮 LTE | Hetzner 2949ms | FI-011 [Reality]
+vless://0509acee-63e3-4364-95cc-21c601f059be@95.216.240.241:443?security=reality&encryption=none&pbk=6r6uq4tZym5wRhJ5uti-h-UvN6uatQodMcG8rBU79Q4&headerType=none&allowinsecure=0&type=tcp&flow=xtls-rprx-vision&sni=booking.com&fp=chrome#✅ 🇫🇮 LTE | Hetzner 3527ms | FI-012 [Reality]
+vless://64ae71df-4af7-4477-bb7d-8ea9a551bc21@37.27.246.211:443?mode=auto&path=%2F&security=reality&encryption=none&pbk=wwJmfWX0TYAkFhwG2ej66BRss-LHHJD5BFhtBcRZF0Y&host=scholar.google.com&fp=chrome&type=xhttp&sni=myket.ir&sid=ce5a88c525#✅ 🇫🇮 LTE | Hetzner 3665ms | FI-013 [Reality]
+vless://696915f2-5ad4-452b-987c-d83d29d0503a@85.192.49.174:443?type=grpc&security=reality&fp=chrome&pbk=zz1etKRzRA4fwe0Te0p6jAlHorNJs4mmcljA3oL520E&sid=dfe3b09582689d40&sni=fi.moktana.app&mode=gun&serviceName=xyz#✅ 🇫🇮 LTE | H2nexus 3679ms | FI-014 [Reality]

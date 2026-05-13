@@ -1,0 +1,7 @@
+# VLESS Configs - HU 🇭🇺
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 3 / Всего: 3
+
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@74.49.215.63:8880?sni=jp.laoyoutiao.link&type=ws&host=jp.laoyoutiao.link&path=/Telegram#✅ 🇭🇺 Универсальный | Cloudflare 2318ms | HU-001 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@74.49.214.254:8880?type=ws&host=yg.bantony199.top&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#✅ 🇭🇺 Универсальный | Cloudflare 2857ms | HU-002 [WS]
+vless://583ceab3-4022-4553-9158-9bedc625ad4e@74.49.214.177:8880?sni=ip.langmanshanxi.top#✅ 🇭🇺 Сервер | Cloudflare 3535ms | HU-003 [TCP]

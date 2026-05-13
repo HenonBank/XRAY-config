@@ -1,0 +1,27 @@
+# VLESS Configs - SG 🇸🇬
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 23 / Всего: 23
+
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@45.8.211.191:2096?encryption=none&host=sni.my111000.tech&security=tls&sni=sni.my111000.tech&type=ws#✅ 🇸🇬 Универсальный | Cloudflare 145ms | SG-001 [WS+TLS]
+vless://838f5273-5d2d-4630-a0f5-9cc8e4aef4d6@45.8.211.137:443?path=%2F&security=tls&alpn=h2%2Chttp%2F1.1&encryption=none&host=UoIrHqRs.cAfUnEaR.InFo&fp=chrome&type=ws&sni=UoIrHqRs.cAfUnEaR.InFo#✅ 🇸🇬 Универсальный | Cloudflare 155ms | SG-002 [WS+TLS]
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@18.142.9.51:443?sni=gogo.wknm.dpdns.org&type=ws&host=gogo.wknm.dpdns.org&path=/fp=chrome&security=tls#✅ 🇸🇬 Универсальный | Amazon 253ms | SG-003 [WS+TLS]
+vless://1a79d43f-b41c-496b-a241-dcbeefa81f0e@91.124.127.251:8880?type=ws&host=0926.qiang2000.link&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3%20%40WangCai2%20%2F%3Fed%3D2560#✅ 🇸🇬 Универсальный | Cloudflare 450ms | SG-004 [WS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@45.8.211.63:8880?allowInsecure=0&sni=jp.laoyoutiao.link&type=ws&host=jp.laoyoutiao.link&path=/TelegramU0001F1E8U0001F1F3#✅ 🇸🇬 Универсальный | Cloudflare 489ms | SG-005 [WS]
+vless://06b65903-406d-4a41-8463-6fd5c0ee7798@38.180.9.18:2053?security=tls&sni=sn1.skylee5.cloudns.ch&type=ws&host=sn1.skylee5.cloudns.ch&path=%2Fproxyip%3DProxyIP.CMLiussss.net#✅ 🇸🇬 Универсальный | M247 1018ms | SG-006 [WS+TLS]
+vless://ee6774c0-9b19-4ff1-8b30-2da4b71977e2@47.245.95.160:1443?sni=edcci.aimercc.filegear-sg.me&type=ws&allowInsecure=1#✅ 🇸🇬 Универсальный | Alibaba 1278ms | SG-007 [WS]
+vless://96a1b724-68d2-4f4d-ab25-38ecd83577bc@45.8.211.147:2096?security=tls&sni=LhCgBjGr29.vElTrIxS.OrG&type=ws&host=LhCgBjGr29.vElTrIxS.OrG&path=%2F&fp=chrome&alpn=h3%2Ch2#✅ 🇸🇬 Универсальный | Cloudflare 1411ms | SG-008 [WS+TLS]
+vless://ee2bb495-2632-445b-b1f8-3c476a50b78b@45.8.211.22:2053?path=%2F&security=tls&encryption=none&host=dl1-fr-cdn.easy-upload.org&type=ws&sni=dl1-fr-cdn.easy-upload.org#✅ 🇸🇬 Универсальный | Cloudflare 1745ms | SG-009 [WS+TLS]
+vless://89b3cbba-e6ac-485a-9481-976a0415eab9@45.8.211.183:80?security=none&type=ws&host=uuhUHYygEsdFGH.UYHJHGvgFcjGUJhbUIlbVFDxDxM.xyz&path=Telegram%3A%40ShadowProxy66%2F%3Fed%3D2560#✅ 🇸🇬 Универсальный | Cloudflare 2186ms | SG-010 [WS]
+vless://0844ceed-af3c-46cd-9d29-2295309a1701@45.253.245.57:10201?security=reality&flow=xtls-rprx-vision&sni=img14.360buyimg.com&type=tcp&fp=safari&pbk=GwBhOiy3pLa73zga-wmG07xRfiI71_A9VDi-DiHeBWk&sid=9153#✅ 🇸🇬 LTE | liasail 2390ms | SG-011 [Reality]
+vless://784646e5-8e84-4672-8670-efc9cafcd2cc@45.8.211.246:443?security=tls&sni=cvarad3.taban-rason.space&type=ws&path=%2F&fp=chrome&alpn=h2%2Chttp%2F1.1#✅ 🇸🇬 Универсальный | Cloudflare 2459ms | SG-012 [WS+TLS]
+vless://06b65903-406d-4a41-8463-6fd5c0ee7798@91.192.81.154:2053?encryption=none&security=tls&sni=sn1.skylee5.cloudns.ch&type=ws&host=sn1.skylee5.cloudns.ch&path=%2Fproxyip%3Dproxyip.cmliussss.net#✅ 🇸🇬 Универсальный | Melbikomas 2709ms | SG-013 [WS+TLS]
+vless://f184c89c-80a4-4a3a-bc67-97db43266c11@43.128.95.84:38091?security=tls&sni=vdd.wxgqlfx.cn&type=ws&host=vdd.wxgqlfx.cn&fp=chrome&alpn=http/1.1#✅ 🇸🇬 Универсальный | Shenzhen 2930ms | SG-014 [WS+TLS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@45.8.211.229:80?sni=reedfree8mahsang2.redorg.ir&type=ws&host=reedfree8mahsang2.redorg.ir&path=/Channel&allowInsecure=0#✅ 🇸🇬 Универсальный | Cloudflare 3252ms | SG-015 [WS]
+vless://31a27ed1-2ec6-4ab5-95b6-3e213e59e0a9@45.8.211.110:2087?security=tls&sni=Tp3993VbRi.ScOrPiOnBiGpLaY.oRg&type=ws&host=Tp3993VbRi.ScOrPiOnBiGpLaY.oRg&path=%2F&fp=chrome&alpn=h2%2Chttp%2F1.1#✅ 🇸🇬 Универсальный | Cloudflare 3316ms | SG-016 [WS+TLS]
+vless://31cebb90-917e-4bf4-9f2c-8ec4e35b286d@5.223.45.64:80?security=none&encryption=none&type=tcp&host=zula.ir&path=/&headerType=http#✅ 🇸🇬 Сервер | Hetzner 3377ms | SG-017 [TCP]
+vless://94d04e32-bc77-4eea-b57c-29ef4b7ef4b0@43.156.116.194:443?security=tls&sni=agedy.ambercc.filegear-sg.me&type=ws&path=/?ed#✅ 🇸🇬 Универсальный | Shenzhen 3511ms | SG-018 [WS+TLS]
+vless://981fca81-5be1-41f8-ac9b-d138e8109943@47.84.54.115:443?allow_insecure=0&host=babayaga-6i7.pages.dev&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2&security=tls&sni=babayaga-6i7.pages.dev&type=ws#✅ 🇸🇬 Универсальный | Alibaba 3540ms | SG-019 [WS+TLS]
+vless://981fca81-5be1-41f8-ac9b-d138e8109943@47.82.155.79:8443?allow_insecure=0&host=babayaga-6i7.pages.dev&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2&security=tls&sni=babayaga-6i7.pages.dev&type=ws#✅ 🇸🇬 Универсальный | Alibaba 3595ms | SG-020 [WS+TLS]
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@45.8.211.95:443?encryption=none&security=tls&sni=cfed.tgzdyz2.top&type=ws&path=tg%40zdyz2#✅ 🇸🇬 Универсальный | Cloudflare 3611ms | SG-021 [WS+TLS]
+vless://981fca81-5be1-41f8-ac9b-d138e8109943@47.82.155.79:2053?allow_insecure=0&host=babayaga-6i7.pages.dev&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2&security=tls&sni=babayaga-6i7.pages.dev&type=ws#✅ 🇸🇬 Универсальный | Alibaba 3616ms | SG-022 [WS+TLS]
+vless://6f995056-7802-4a1d-bff7-61678e626c3f@13.67.9.5:443?security=tls&sni=shg2.azurewebsites.net&type=ws&host=shg2.azurewebsites.net&path=%2F#✅ 🇸🇬 Универсальный | Microsoft 3651ms | SG-023 [WS+TLS]

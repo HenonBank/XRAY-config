@@ -1,0 +1,16 @@
+# VLESS Configs - BR 🇧🇷
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 12 / Всего: 12
+
+vless://cf1a37bc-140b-4a3a-a18c-10c9f87eaad6@br.cdn.stun.su:443?security=reality&type=tcp&flow=xtls-rprx-vision&sni=br.cdn.stun.su&fp=qq&pbk=su3dq3BDLDkX-jIjq3GyVUXwqzD7CNVYzKtOcO4HQ24&spx=%2F&sid=f6f88b14adc6f641#✅ 🇧🇷 LTE | br.cdn.stun.su 315ms | BR-001 [Reality]
+vless://97b11ee6-a62a-4e60-839c-de974a155089@45.194.53.246:443?security=tls&sni=ttgju.org&type=ws&host=hj-de.ttgju.org&path=%2Fhajmi%3Fed%3D2560&alpn=http%2F1.1#✅ 🇧🇷 Универсальный | Cloudflare 573ms | BR-002 [WS+TLS]
+vless://0603385b-2d6f-4bfb-8f26-d26dbc85878d@92.223.12.26:443?security=tls&sni=revil.servehttp.com&alpn=http/1.1&fp=chrome&type=ws&path=/?ed%3D2048&host=revil.servehttp.com&encryption=none#✅ 🇧🇷 Универсальный | G-Core 1086ms | BR-003 [WS+TLS]
+vless://0603385b-2d6f-4bfb-8f26-d26dbc85878d@92.223.12.16:443?security=tls&sni=revil.servehttp.com&alpn=http/1.1&fp=chrome&type=ws&path=/?ed%3D2048&host=revil.servehttp.com&encryption=none#✅ 🇧🇷 Универсальный | G-Core 1264ms | BR-004 [WS+TLS]
+vless://c5293efa-28f8-4a0f-8f34-541078970cee@45.194.53.13:8443?path=Telegram%40V2ray_Alpha%2F%3Fed&security=tls&encryption=none&type=ws&sni=gozargah.validbv7996.ir#✅ 🇧🇷 Универсальный | Cloudflare 2587ms | BR-005 [WS+TLS]
+vless://71ed6628-5870-4d19-8a52-f2a3ba3d4898@45.194.53.196:443?security=tls&sni=vbbc.ylks2024.us.kg&type=ws&host=vbbc.ylks2024.us.kg&path=%2Fvbba.ylks2024.us.kg#✅ 🇧🇷 Универсальный | Cloudflare 2718ms | BR-006 [WS+TLS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@45.194.53.213:8880?sni=jp.laoyoutiao.link&type=ws&host=jp.laoyoutiao.link&allowInsecure=0#✅ 🇧🇷 Универсальный | Cloudflare 2761ms | BR-007 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@45.194.53.254:8880?sni=Telegram-channel-WangCai2&type=ws&host=yg.bantony199.top&path=/Telegram#✅ 🇧🇷 Универсальный | Cloudflare 2851ms | BR-008 [WS]
+vless://97b11ee6-a62a-4e60-839c-de974a155089@45.194.53.144:443?security=tls&sni=ttgju.org&type=ws&host=hj-de.ttgju.org&path=%2Fhajmi%3Fed%3D2560&alpn=http%2F1.1#✅ 🇧🇷 Универсальный | Cloudflare 2950ms | BR-009 [WS+TLS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@38.180.79.9:80?security=none&type=ws&host=reedfree8mahsang2.redorg.ir&path=Telegram#✅ 🇧🇷 Универсальный | M247 2990ms | BR-010 [WS]
+vless://40c708ca-42e4-4224-a12d-1dbd7ef1e0b7@45.194.53.77:8880?allowInsecure=0&sni=Telegram-channel-WangCai2&type=ws&host=free.cfdns.online&path=/Telegram#✅ 🇧🇷 Универсальный | Cloudflare 3133ms | BR-011 [WS]
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@45.194.53.238:2096?path=%2F%3Fed%3D2560%26telegram%F0%9F%87%A8%F0%9F%87%B3%2B%40wangcai2&security=tls&encryption=none&host=sni.jpmj.dev&fp=chrome&type=ws&sni=sni.jpmj.dev#✅ 🇧🇷 Универсальный | Cloudflare 3573ms | BR-012 [WS+TLS]

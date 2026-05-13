@@ -1,0 +1,16 @@
+# VLESS Configs - BG 🇧🇬
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 12 / Всего: 12
+
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@45.142.120.92:443?security=tls&sni=cfed.tgzdyz2.top&type=ws&path=tg%40zdyz2#✅ 🇧🇬 Универсальный | Cloudflare 1584ms | BG-001 [WS+TLS]
+vless://e009d0ae-5ce1-4bc4-91f4-fac20f5f6cac@45.142.120.13:443?type=ws&host=cdnhid.vpweb.cfd&path=/XwFwwXRySM8UlqCvGVMHKx1&security=tls&fp=chrome&sni=cdnhid.vpweb.cfd#✅ 🇧🇬 Универсальный | Cloudflare 2379ms | BG-002 [WS+TLS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@45.142.120.116:8880?security=none&type=ws&host=reedfree8mahsang2.redorg.ir&path=Telegram%40ShadowProxy66%2F%3Fed%3D2560#✅ 🇧🇬 Универсальный | Cloudflare 2454ms | BG-003 [WS]
+vless://b5441b0d-2147-4898-8a6a-9b2c87f58382@45.142.120.3:8880?sni=Telegram-channel-WangCai2&type=ws&host=bitget1.asdasd.click&path=/Telegram#✅ 🇧🇬 Универсальный | Cloudflare 2519ms | BG-004 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@89.117.112.254:8880?type=ws&host=yg.bantony199.top&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#✅ 🇧🇬 Универсальный | Cloudflare 2661ms | BG-005 [WS]
+vless://9f3c4ab7-ea26-4d96-91a9-c85ff64ad9a0@89.117.112.13:8880?&fp=chrome&sni=Telegram-channel-WangCai2&type=ws&headerType=none&host=c.82313369.xyz&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3%20%40WangCai2%20%2F%3Fed%3D2560#✅ 🇧🇬 Универсальный | Cloudflare 2826ms | BG-006 [WS]
+vless://40c708ca-42e4-4224-a12d-1dbd7ef1e0b7@45.142.120.77:8880?allowInsecure=0&sni=Telegram-channel-WangCai2&type=ws&host=free.cfdns.online&path=/Telegram#✅ 🇧🇬 Универсальный | Cloudflare 2895ms | BG-007 [WS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@45.142.120.184:8880?sni=reedfree8mahsang2.redorg.ir&type=ws&host=reedfree8mahsang2.redorg.ir&allowInsecure=0#✅ 🇧🇬 Универсальный | Cloudflare 2988ms | BG-008 [WS]
+vless://89b3cbba-e6ac-485a-9481-976a0415eab9@45.142.120.134:80?path=Telegram%3A%40ShadowProxy66%2F%3Fed%3D2560&security=none&encryption=none&host=uuhUHYygEsdFGH.UYHJHGvgFcjGUJhbUIlbVFDxDxM.xyz&type=ws#✅ 🇧🇬 Универсальный | Cloudflare 3041ms | BG-009 [WS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@45.142.120.93:8880?sni=reedfree8mahsang2.redorg.ir&type=ws&host=reedfree8mahsang2.redorg.ir&allowInsecure=0#✅ 🇧🇬 Универсальный | Cloudflare 3407ms | BG-010 [WS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@45.142.120.163:8880?security=none&type=ws&host=reedfree8mahsang2.redorg.ir&path=Telegram%3A%40Selinc%2F%3Fed%3D2560#✅ 🇧🇬 Универсальный | Cloudflare 3443ms | BG-011 [WS]
+vless://2a943112-138b-432d-a3a5-277ea2fd8a2e@45.142.120.190:443?security=tls&sni=Tp810P28gI.aNa-SoFt.Ir&type=grpc#✅ 🇧🇬 Универсальный | Cloudflare 3565ms | BG-012 [gRPC+TLS]

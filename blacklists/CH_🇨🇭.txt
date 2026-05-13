@@ -1,0 +1,9 @@
+# VLESS Configs - CH 🇨🇭
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 5 / Всего: 5
+
+vless://85988c00-baff-51d4-babd-d2cf2fecdce5@84.234.29.208:443?security=reality&sni=miro.com&type=tcp&fp=chrome&pbk=Sbr5E-2N9FFuLjTvVIXwNiCtgKAAE0yCYpuTArScuwM&sid=72#✅ 🇨🇭 LTE | Infomaniak 1159ms | CH-001 [Reality]
+vless://e8f6d88d-edff-4cc7-ae8f-a2208c043714@45.95.232.64:443?mode=gun&amp;security=reality&amp;encryption=none&amp;pbk=_eyh-kE7mxYo1SS5k2XfDNP7M2mpL3gqJ3u97L7j2SU&amp;fp=random&amp;type=grpc&amp;serviceName=&amp;sni=ak.dr-web.fun&amp;sid=42c148ff#✅ 🇨🇭 Сервер | Global 1896ms | CH-002 [TCP]
+vless://8a12918a-b60a-4a42-95c2-05a25ffa61a6@95.85.239.204:9443?type=tcp&security=reality&encryption=none&flow=xtls-rprx-vision&pbk=SS3PlIUow2NHdz1aklglEzVVIsmIzjMhdrLm5jVV51c&sid=0123456789abcdef&sni=google.com&fp=chrome#✅ 🇨🇭 LTE | MHost 2281ms | CH-003 [Reality]
+vless://7c917504-9b62-4c48-85bb-8ae5bc925315@83.228.223.16:443?type=tcp&headerType=none&security=reality&encryption=none&sni=ch.kosmosapp.ru&fp=qq&pbk=r77nilacD34SeLmghmchRKuNiUL0xzh-pK87Ux58dzI&sid=d0a1665d1b96515e&flow=xtls-rprx-vision#✅ 🇨🇭 LTE | Infomaniak 3254ms | CH-004 [Reality]
+vless://89b3cbba-e6ac-485a-9481-976a0415eab9@45.85.93.51:443?security=tls&sni=vz.ylks.xyz&type=ws&path=%2F%3Fproxyip#✅ 🇨🇭 Универсальный | Serva 3475ms | CH-005 [WS+TLS]

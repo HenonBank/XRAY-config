@@ -1,0 +1,6 @@
+# VLESS Configs - AR 🇦🇷
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 2 / Всего: 21
+
+vless://e4689b64-6770-40e2-826c-13d19a6feb9b@ar.hpsshop.ir:8880?path=%2F&security=none&encryption=none&host=ar.hpsshop.ir&type=ws#✓ 🇦🇷 AR-001 [WS]
+vless://52d726aa-b3b0-46a3-8c6d-b5421ef8b1a1@stupid-erica-vz-76e7190b.koyeb.app:443?security=tls&sni=stupid-erica-vz-76e7190b.koyeb.app&type=ws&path=/TG@bing990118&host=stupid-erica-vz-76e7190b.koyeb.app&encryption=none#✓ 🇦🇷 AR-002 [WS+TLS]

@@ -1,0 +1,6 @@
+# VLESS Configs - RS 🇷🇸
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 2 / Всего: 4
+
+vless://f6c00652-671c-0066-a35b-b43b3e176b3a@rs.marketmust.ru:443?encryption=none&flow=xtls-rprx-vision&security=reality&sni=rs.marketmust.ru&fp=chrome&pbk=hgPrLztdgoiNzP0XKNqP5UR3KZU8dzqu4gIbA2_TbFY&sid=75f8575e5396a2fe&type=tcp&headerType=none#✓ 🇷🇸 RS-001 [Reality]
+vless://8fb02ca4-4000-00e4-a89b-5f9878e7d9b1@rs.marketmust.ru:443?security=reality&encryption=none&pbk=hgPrLztdgoiNzP0XKNqP5UR3KZU8dzqu4gIbA2_TbFY&headerType=none&type=tcp&flow=xtls-rprx-vision&sni=rs.marketmust.ru&sid=75f8575e5396a2fe#✓ 🇷🇸 RS-002 [Reality]

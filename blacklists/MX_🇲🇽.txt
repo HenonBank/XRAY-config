@@ -1,0 +1,5 @@
+# VLESS Configs - MX 🇲🇽
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 1 / Всего: 6
+
+vless://aa5749e8-8fb9-59cd-b0e7-c0a26937cf33@www.speedtest.net:443?security=tls&sni=mx-1-ssm.medicaldream.ir&allowInsecure=1&fp=chrome&type=ws&path=/vless&host=mx-1-ssm.medicaldream.ir&encryption=none#✓ 🇲🇽 MX-001 [WS+TLS]

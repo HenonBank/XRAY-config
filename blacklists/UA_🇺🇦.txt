@@ -1,0 +1,15 @@
+# VLESS Configs - UA 🇺🇦
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 11 / Всего: 11
+
+vless://ff920d01-cdb5-4ec8-9815-29d6b99ba19b@45.135.235.1:8443?mode=gun&security=tls&encryption=none&alpn=h2&authority=&type=grpc&serviceName=&sni=tamam.filegear-sg.me#✅ 🇺🇦 Универсальный | Sipcom 147ms | UA-001 [gRPC+TLS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@89.116.180.29:8880?sni=hk.laoyoutiao.link&type=ws&host=hk.laoyoutiao.link&path=/TelegramU0001F1E8U0001F1F3&allowInsecure=0#✅ 🇺🇦 Универсальный | Cloudflare 1467ms | UA-002 [WS]
+vless://71ed6628-5870-4d19-8a52-f2a3ba3d4898@89.116.180.183:8443?security=tls&sni=va.zhuk.us.kg&type=ws&host=va.zhuk.us.kg&path=%2F%3Fed%3D2560#✅ 🇺🇦 Универсальный | Cloudflare 1632ms | UA-003 [WS+TLS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@45.135.235.63:8880?sni=jp.laoyoutiao.link&type=ws&host=jp.laoyoutiao.link&path=/Telegram#✅ 🇺🇦 Универсальный | Sipcom 1651ms | UA-004 [WS]
+vless://71ed6628-5870-4d19-8a52-f2a3ba3d4898@89.116.180.183:443?security=tls&sni=va.zhuk.us.kg&type=ws&host=va.zhuk.us.kg&path=%2F%3Fed%3D2560#✅ 🇺🇦 Универсальный | Cloudflare 2640ms | UA-005 [WS+TLS]
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@89.116.180.130:2053?encryption=none&security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#✅ 🇺🇦 Универсальный | Cloudflare 2694ms | UA-006 [WS+TLS]
+vless://71ed6628-5870-4d19-8a52-f2a3ba3d4898@45.135.235.168:443?security=tls&sni=vbbd.ylks2024.us.kg&type=ws&host=vbbd.ylks2024.us.kg&path=%2Fvbba.ylks2024.us.kg#✅ 🇺🇦 Универсальный | Sipcom 3112ms | UA-007 [WS+TLS]
+vless://52c57282-dfe3-4954-856a-87b9a188e6b9@45.135.235.8:2083?security=tls&sni=tamam.filegear-sg.me&type=splithttp&host=tamam.filegear-sg.me&alpn=h3,h2,http/1.1#✅ 🇺🇦 Сервер | Sipcom 3444ms | UA-008 [TLS]
+vless://fab7bf9c-ddb9-4563-8a04-fb01ce6c0fbf@89.116.180.156:8880?allowInsecure=0&sni=Telegram-channel-WangCai2&type=ws&host=kjgx.laoyoutiao.link&path=/TelegramU0001F1E8U0001F1F3#✅ 🇺🇦 Универсальный | Cloudflare 3454ms | UA-009 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@45.135.235.254:8880?sni=Telegram-channel-WangCai2&type=ws&host=yg.bantony199.top&path=/Telegram#✅ 🇺🇦 Универсальный | Sipcom 3533ms | UA-010 [WS]
+vless://1149be91-5a4f-47de-995f-66f8d7d64498@89.116.180.1:2096?encryption=none&security=tls&sni=De13.SiMaNsAnAt.Ir.&alpn=h2&fp=chrome&type=ws&host=De13.SiMaNsAnAt.Ir.&path=%2F#✅ 🇺🇦 Универсальный | Cloudflare 3675ms | UA-011 [WS+TLS]

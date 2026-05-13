@@ -1,0 +1,12 @@
+# VLESS Configs - DK 🇩🇰
+# Обновлено: 2026-05-13 04:50:41
+# Живых: 8 / Всего: 14
+
+vless://832a3784-7ae1-4ff2-ab13-5fb4bf8abd28@199.232.40.47:80?path=%2FJoin----HAJIMAMADVPN---Join----HAJIMAMADVPN---Join----HAJIMAMADVPN---Join----HAJIMAMADVPN---Join----HAJIMAMADVPN---Join----HAJIMAMADVPN---Join----HAJIMAMADVPN&security=none&encryption=none&host=downloadha.global.ssl.fastly.net&type=ws#✓ 🇩🇰 DK-001 [WS]
+vless://aaaaaabb-4ddd-4eee-9fff-ffffffffffff@x-cite.dk:443?encryption=none&security=tls&sni=afrcloud22.mmv.kr&allowInsecure=1&type=ws&host=afrcloud22.mmv.kr&path=/185.186.245.40:81#✓ 🇩🇰 DK-002 [WS+TLS]
+vless://12d6cf82-9eee-4b01-b1bb-e1c1a437a162@195.85.59.155:80?security=none&amp;type=ws&amp;host=dl2.wwwiransell.ir.%D1%81%D0%B0%D0%B5%D1%82c%D0%B0%D0%BD%D1%82%D1%83.%E7%83%8F%E5%85%8B%E7%88%BE.y%D1%80%D0%BA%D0%B5%D0%BB%D1%8C%D0%BF.wonkacapitano.buzz.&amp;path=%2Fvless%23t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro-t-me-DarkVPNpro%3Fed%3D2048#✓ 🇩🇰 DK-003 [TCP]
+vless://0050c022-8dae-42b6-9435-895654a42f97@speed.cloudflare.com:443?security=tls&type=ws&sni=tg.cmliussss.kozow.com&alpn=http%2F1.1&host=tg.cmliussss.kozow.com&path=%2F%3Fproxyip%3Dproxyip.oracle.fxxk.dedyn.io&ed=2048&eh=Sec-Websocket-Protocol&fp=chrome#✓ 🇩🇰 DK-004 [WS+TLS]
+vless://6ba20a61-9ca7-4f9e-ac38-95f63c888a95@193.180.211.106:443?security=reality&flow=xtls-rprx-vision&sni=www.google.com&type=tcp&fp=chrome&pbk=9ScHOKzJC7yKULZTUXzLHqW1YdVm1iuAztbg3uyU4W4&sid=3b5f17c573589047#✓ 🇩🇰 DK-005 [Reality]
+vless://c40d81ec-bd3f-4714-8cb2-9788414700d9@xn--rdekors-q1a.dk:443?security=tls&type=ws&headerType=&path=&host=mizbanvps.ir&sni=xn--rdekors-q1a.dk&fp=chrome&alpn=h2%2Chttp%2F1.1&allowInsecure=1#✓ 🇩🇰 DK-006 [WS+TLS]
+vless://261a5fda-942a-408f-9ec8-4f37967a1bce@zmaoz.faculty.ucdavis.edu:443?path=%2F%3Fed%3D1024&security=tls&encryption=none&alpn=h3,h2,http/1.1&host=v2rayfast7.net&fp=chrome&type=ws&sni=zmaoz.faculty.ucdavis.edu#✓ 🇩🇰 DK-007 [WS+TLS]
+vless://d8a98c8e-32ff-55f4-927c-93725a3c8e63@speed.cloudflare.com:80?type=ws&host=speedtest2.sbs.dk1.vless.sitespeedtest.net&path=%2Fvless&ed=2048&eh=Sec-Websocket-Protocol&fp=chrome#✓ 🇩🇰 DK-008 [WS]

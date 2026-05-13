@@ -1,0 +1,6 @@
+# VLESS Configs - IN 🇮🇳
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 2 / Всего: 2
+
+vless://75d4d24d-ba8d-3676-a5c6-edd6ea6dbfb6@s5.db-link.in:17820?type=ws&encryption=none&host=48afa0c5c9.shopify.com&path=%2Fdb102448afa0c5c9fp%3Dchrome&headerType=none&quicSecurity=none&serviceName=&security=tls&flow=&fp=chrome&insecure=1&sni=48afa0c5c9.shopify.com#✅ 🇮🇳 Универсальный | s5.db-link.in 304ms | IN-001 [WS+TLS]
+vless://5c097f8d-2379-4e49-b819-71ea9ddc7aeb@45.88.183.133:443?security=reality&type=tcp&flow=xtls-rprx-vision&sni=apple.com&fp=chrome&pbk=Nmf1dMYtEam2_fIFdX8GhiC-Ti6ftoqYbsEdrmVi5kE&sid=8c4a5f940964f388#✅ 🇮🇳 LTE | NETRANEX 1419ms | IN-002 [Reality]

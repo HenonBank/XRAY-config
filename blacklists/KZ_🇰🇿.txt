@@ -1,0 +1,16 @@
+# VLESS Configs - KZ 🇰🇿
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 12 / Всего: 12
+
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@31.43.179.191:2096?allowInsecure=1&encryption=none&host=sni.my111000.tech&security=tls&sni=sni.my111000.tech&type=ws#✅ 🇰🇿 Универсальный | Cloudflare 29ms | KZ-001 [WS+TLS]
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@31.43.179.52:443?path=tg%40zdyz2&security=tls&encryption=none&type=ws&sni=cfed.tgzdyz2.top#✅ 🇰🇿 Универсальный | Cloudflare 29ms | KZ-002 [WS+TLS]
+vless://96a1b724-68d2-4f4d-ab25-38ecd83577bc@31.43.179.202:2096?security=tls&sni=HiDyVnDe14.bInTeRmA.OrG&type=ws&host=HiDyVnDe14.bInTeRmA.OrG&path=%2F&fp=chrome&alpn=h3%2Ch2#✅ 🇰🇿 Универсальный | Cloudflare 39ms | KZ-003 [WS+TLS]
+vless://96a1b724-68d2-4f4d-ab25-38ecd83577bc@31.43.179.134:2096?encryption=none&security=tls&sni=JpHzJdVn23.bLuEvIa.oRg&type=ws&host=JpHzJdVn23.bLuEvIa.oRg&path=%2F#✅ 🇰🇿 Универсальный | Cloudflare 204ms | KZ-004 [WS+TLS]
+vless://96a1b724-68d2-4f4d-ab25-38ecd83577bc@31.43.179.103:8443?security=tls&sni=QtRkJtLt27.pRiMeXaD.OrG&type=ws&host=QtRkJtLt27.pRiMeXaD.OrG&path=%2F&fp=chrome&alpn=h3%2Ch2#✅ 🇰🇿 Универсальный | Cloudflare 372ms | KZ-005 [WS+TLS]
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@31.43.179.80:443?security=tls&sni=cfed.tgzdyz2.top&type=ws&path=tg%40zdyz2#✅ 🇰🇿 Универсальный | Cloudflare 1631ms | KZ-006 [WS+TLS]
+vless://4d91916f-a7fd-419b-8b90-640bb8d4b3f2@31.43.179.37:443?security=tls&sni=mypHOtoGRAPICpIctUre.iR&type=ws&host=myphotograpicpicture.ir&path=%2FfJBvsL0uR2MtzRig&alpn=http%2F1.1#✅ 🇰🇿 Универсальный | Cloudflare 1649ms | KZ-007 [WS+TLS]
+vless://53fa8faf-ba4b-4322-9c69-a3e5b1555049@31.43.179.20:8880?security=none&sni=reedfree8mahsang2.redorg.ir&type=ws&host=reedfree8mahsang2.redorg.ir&path=%2F%3Fed%3D2560#✅ 🇰🇿 Универсальный | Cloudflare 1944ms | KZ-008 [WS]
+vless://34c01e61-f4f3-4afb-a83b-406caf8caa33@31.43.179.254:8880?type=ws&host=yg.bantony199.top&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#✅ 🇰🇿 Универсальный | Cloudflare 3347ms | KZ-009 [WS]
+vless://4b9063e0-3288-44e9-9aac-80fbfce323a0@83.222.23.81:38065?security=reality&encryption=none&pbk=dSSDPTK6AHfAdRAXD9i4rzqcNIY65RxlF25UyCKdiyo&headerType=none&fp=chrome&type=tcp&sni=yahoo.com&sid=fa#✅ 🇰🇿 LTE | BEGET 3424ms | KZ-010 [Reality]
+vless://08cb0591-5193-4a0c-9105-ceb09fba67fe@31.43.179.124:2053?path=%2F&security=tls&encryption=none&host=iYjnx-71195.zephorium.uk&fp=chrome&type=ws&sni=iYjnx-71195.zephorium.uk#✅ 🇰🇿 Универсальный | Cloudflare 3531ms | KZ-011 [WS+TLS]
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@31.43.179.98:443?path=tg%40zdyz2&security=tls&encryption=none&host=cfed.tgzdyz2.top&type=ws&sni=cfed.tgzdyz2.top#✅ 🇰🇿 Универсальный | Cloudflare 3563ms | KZ-012 [WS+TLS]

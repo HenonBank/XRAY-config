@@ -1,0 +1,5 @@
+# VLESS Configs - PT 🇵🇹
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 1 / Всего: 1
+
+vless://f868f2de-95b4-4dd3-bc96-b0afdd77e655@5.182.39.243:443?encryption=none&type=ws&host=joss.gpj4.web.id&path=%2FFree-VPN-CF-Geo-Project%2F5.182.39.243%3D443&security=tls&fp=randomized&sni=joss.gpj4.web.id#✅ 🇵🇹 Универсальный | WorkTitans 3275ms | PT-001 [WS+TLS]

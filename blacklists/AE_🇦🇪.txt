@@ -1,0 +1,13 @@
+# VLESS Configs - AE 🇦🇪
+# Обновлено: 2026-05-13 15:57:33
+# Живых: 9 / Всего: 9
+
+vless://71ed6628-5870-4d19-8a52-f2a3ba3d4898@77.232.140.76:443?security=tls&sni=vbbc.ylks2024.us.kg&type=ws&host=vbbc.ylks2024.us.kg&path=%2Fvbba.ylks2024.us.kg#✅ 🇦🇪 Универсальный | Cloudflare 28ms | AE-001 [WS+TLS]
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@94.140.0.138:443?security=tls&sni=cfed.tgzdyz2.top&type=ws&path=tg%40zdyz2#✅ 🇦🇪 Универсальный | Cloudflare 38ms | AE-002 [WS+TLS]
+vless://583ceab3-4022-4553-9158-9bedc625ad4e@77.232.140.177:8880?security=tls#✅ 🇦🇪 Сервер | Cloudflare 2106ms | AE-003 [TLS]
+vless://9f3c4ab7-ea26-4d96-91a9-c85ff64ad9a0@94.140.0.13:8880?type=ws&security=none&host=c.82313369.xyz&path=%2FTelegram%25F0%259F%2587%25A8%25F0%259F%2587%25B3%2520%2540WangCai2%2520%2F%253Fed%253D2560#✅ 🇦🇪 Универсальный | Cloudflare 2517ms | AE-004 [WS]
+vless://f02a08c2-f157-42c9-bdd6-74f6e2e5e8ef@94.140.0.0:8080?path=%2F%3Fed%3D8888&security=none&encryption=none&host=www.speedtest.net.tps.debian.org.gr.websites.varzesh3.svnteam-vip-fast.ip-ddns.com.&type=httpupgrade#✅ 🇦🇪 Сервер | Cloudflare 2969ms | AE-005 [TCP]
+vless://73f15c26-5545-492f-bb67-a4ef3737a060@94.140.0.1:443?path=%2FeyJqdW5rIjoiODhWQThCY3U0NEltOVVMIiwicHJvdG9jb2wiOiJ2bCIsIm1vZGUiOiJwcm94eWlwIiwicGFuZWxJUHMiOltdfQ%3D%3D%3Fed%3D2560&security=tls&alpn=http%2F1.1&encryption=none&host=zVN6pn2Es0J9d6S0UdbWm5wxLYZp9AK7.973A1F0DD9.wORKErS.DEV&fp=chrome&type=ws&sni=zVN6pn2Es0J9d6S0UdbWm5wxLYZp9AK7.973A1F0DD9.wORKErS.DEV#✅ 🇦🇪 Универсальный | Cloudflare 3453ms | AE-006 [WS+TLS]
+vless://fe3e27c2-f708-4b7a-b7f3-76c5ffdcf95b@94.140.0.0:80?security=none&type=ws&sni=app0.forsarinna.site&path=/&encryption=none&headerType=none#✅ 🇦🇪 Универсальный | Cloudflare 3456ms | AE-007 [WS]
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@38.180.11.15:443?&security=tls&fp=chrome&sni=3-7v4.pages.dev&type=ws&headerType=none&host=3-7v4.pages.dev&path=%2Fproxyip%3DProxyIP.DE.owg.dpdns.org#✅ 🇦🇪 Универсальный | M247 3552ms | AE-008 [WS+TLS]
+vless://3710da8d-bc32-4d42-a4cc-6148e9924b4f@94.140.0.0:2087?path=/&security=tls&encryption=none&insecure=0&host=amorix.abresani.com&type=ws&allowInsecure=0&sni=amorix.abresani.com#✅ 🇦🇪 Универсальный | Cloudflare 3603ms | AE-009 [WS+TLS]
