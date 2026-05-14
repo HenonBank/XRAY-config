@@ -1,0 +1,5 @@
+# 🇵🇭 Philippines (PH) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 1
+
+vless://caafb022-ed9a-47a5-f35f-cffe760c9d22@free.bartartek.ir:53285?security=reality&amp;encryption=none&amp;pbk=mbok0ZF27k8XOyqh6r_hwou60jUhw7vctMjlQdsj_Ec&amp;headerType=none&amp;fp=chrome&amp;spx=/&amp;type=tcp&amp;flow=xtls-rprx-vision&amp;sni=eset.com&amp;sid=3282a4#Free-Telegram:+@BarTarTek_ph
