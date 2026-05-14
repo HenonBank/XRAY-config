@@ -1,0 +1,17 @@
+# 🇦🇪 UAE (AE) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 13
+
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@144.172.88.117:443?sni=1-aym.pages.dev&type=ws&host=1-aym.pages.dev&security=tls#%5BOpenRay%5D%20%F0%9F%87%A6%F0%9F%87%AA%20AE-15
+vless://45e55198-a5ad-4f19-bb39-236822141d25@188.72.103.3:443?encryption=none&type=ws&security=tls&path=%2Fstream%2Fupdates%2Fb66b78d7%2F019dfd7f-0777-6283-7287-911777c3720f4&host=cdn.lovecrafty.link&fp=chrome&sni=cdn.tracker.yandex.net#%5BOpenRay%5D%20%F0%9F%87%A6%F0%9F%87%AA%20AE-16
+vless://eb071647-72a6-46be-8e89-ff3d228d52f6@ae.cdn.stun.su:443?security=reality&encryption=none&pbk=xJIswEHrphk8LCn-DyJxw4uypPkouxPgNsfiyjRU-3w&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=ae.cdn.stun.su&sid=41a0b29e95aaea87#%F0%9F%8C%90%20TCP-Reality%20%7C%20%40Express_alaki%20%7C%20src%20%40ConfigX2ray```
+vless://1873b7c8-8341-4759-be82-139037d5c198@94.140.0.44:2053?security=tls&sni=my.jadidistorefandogh.ir&type=ws&host=my.jadidistorefandogh.ir&path=%2Fdigikala.com%2Flogin%2F%3Fed%3D2560&fp=chrome&alpn=h3%2Ch2%2Chttp%2F1.1# VL-WS-TLS  AE-94.140.0.44:2053
+vless://9f259fdd-cb89-478d-9bf3-dfe5d6eddcd1@217.60.249.171:45375?security=none&type=tcp&host=telewebion.com&headerType=http# VL-TCP-NONE  AE-217.60.249.171:45375
+vless://f4fffd3b-32ff-4d54-b232-0de299a7553b@109.61.42.127:8811?security=none&type=grpc# VL-GRPC-NONE  AE-109.61.42.127:8811
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@181.214.1.234:2087?security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2F%3Fed%3D2048# VL-WS-TLS  AE-181.214.1.234:2087
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@181.214.1.227:443?security=tls&sni=cfed.tgzdyz2.top&type=ws&host=cfed.tgzdyz2.top&path=tg%40zdyz2# VL-WS-TLS  AE-181.214.1.227:443
+vless://48198295-b7ba-4b5c-8d85-085d55a6c869@20.74.223.241:443?security=tls&sni=ap.ylks.xyz&type=ws&host=ap.ylks.xyz&path=%2F%3Fed%3D2048# VL-WS-TLS  AE-20.74.223.241:443
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@181.214.1.242:2053?encryption=none&security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%f0%9f%87%a6%f0%9f%87%aa+AE+%e9%98%bf%e8%81%94%e9%85%8b+74
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@94.140.0.157:443?encryption=none&security=tls&type=ws&sni=juzibaipiao.5112233.xyz&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%F0%9F%87%A6%F0%9F%87%AA_AE_%E9%98%BF%E8%81%94%E9%85%8B_30
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@181.214.1.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%A6%F0%9F%87%AA%20AE-181.214.1.247%3A8880
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@94.140.0.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%A6%F0%9F%87%AA%20AE-94.140.0.247%3A8880
