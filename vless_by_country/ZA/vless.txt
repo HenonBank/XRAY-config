@@ -1,0 +1,8 @@
+# 🇿🇦 South Africa (ZA) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 4
+
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@139.84.235.99:443?type=ws&encryption=none&host=1-jk1.pages.dev&path=%2F&headerType=none&quicSecurity=none&serviceName=&security=tls&flow=&fp=chrome&insecure=1&sni=1-jk1.pages.dev#%5BOpenRay%5D%20%F0%9F%87%BF%F0%9F%87%A6%20ZA-8
+vless://981fca81-5be1-41f8-ac9b-d138e8109943@102.134.55.53:20082?encryption=none&security=tls&sni=babayaga-6i7.pages.dev&type=ws&host=babayaga-6i7.pages.dev&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%40WangCai2#%5BOpenRay%5D%20%F0%9F%87%BF%F0%9F%87%A6%20ZA-11
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@102.134.48.83:443?sni=gogo.qzzio.dpdns.org&type=ws&host=gogo.qzzio.dpdns.org&path=/fp=chrome&security=tls#%5BOpenRay%5D%20%F0%9F%87%BF%F0%9F%87%A6%20ZA-16
+vless://12823c49-c4ed-4bab-a620-9e804195dd17@212.95.34.171:443?type=tcp&amp;security=reality&amp;fp=firefox&amp;sni=fonts.googleapis.com&amp;pbk=0WStFi5X8IWYSwDWi54EPmxhOjDfaLuCJsrXltmuDzM&amp;sid=d97f10e1&amp;spx=/#@HosseinStore_Za
