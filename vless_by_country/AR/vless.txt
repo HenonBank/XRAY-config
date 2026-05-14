@@ -1,0 +1,7 @@
+# 🇦🇷 Argentina (AR) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 3
+
+vless://2fb91bd1-f95f-4051-b278-be76c212c290@ar.hpsshop.ir:8880/?type=ws&encryption=none&path=/&host=ar.hpsshop.ir&security=none#Join+Telegram:@Farah_VPN
+vless://47cb0c37-f6b6-4fc9-819b-84647695d648@SaTaARaLaIaNaK.ar-panelar.com:2053?security=tls&allowInsecure=0&encryption=none&type=xhttp&path=/&sni=sataaralaianak.ar-panelar.com&fp=chrome&mode=auto&alpn=h2,http/1.1#Join+Telegram:@Farah_VPN
+vless://2271c50f-ac7a-4d7f-8b04-64085b0daa56@45.130.125.160:2052?mode=auto&path=/pabloping?vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz---vpnbaz&security=none&encryption=none&host=pablo-n3.digionix.ir&type=xhttpe=@FreeOnlineVPN#%F0%9F%8C%90%20%7C%20null%20%7C%2099999ms%20%7C%20%2A%2A%2A%E2%9C%85%2A%2A%2A%40AR14N24b
