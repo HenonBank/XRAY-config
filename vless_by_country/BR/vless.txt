@@ -1,0 +1,16 @@
+# 🇧🇷 Brazil (BR) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 12
+
+vless://17ebee4e-97ea-4cad-8737-cc228478ca9d@lively-brook-c471.nedena3319.workers.dev:443?path=/?ed=2048&security=tls&encryption=none&host=lively-brook-c471.nedena3319.workers.dev&fp=chrome&type=ws&sni=lively-brook-c471.nedena3319.workers.dev#%5BOpenRay%5D%20Dynamic-11791
+vless://7bd29cac-f692-48a3-88d1-505f7e55f0d0@it-bridge.sbrf-cdn342.ru:443?type=tcp&headerType=none&security=tls&encryption=none&sni=sub.sbrf-cdn342.ru&fp=qq&alpn=http%2F1.1&flow=xtls-rprx-vision&insecure=0#%5BOpenRay%5D%20Dynamic-1233
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@45.194.53.30:8880?host=vms.lifetime19.workers.dev&path=%2F%3Fed%3D2560%26https%3A%2F%2Ft.me%2Fyoutube%40ZYFXS%F0%9F%87%A8%F0%9F%87%B3&type=ws#%5BOpenRay%5D%20%F0%9F%87%A7%F0%9F%87%B7%20BR-100
+vless://8a77b19a-36be-43ff-ace0-bc322aa4f1e3@br.pineappled.org:443?security=reality&encryption=none&pbk=CKxzpUtdHkJYJDpogsZSGCz9J6nlOTWdsOMz3sARDVI&headerType=none&fp=chrome&type=tcp&flow=xtls-rprx-vision&sni=google.com&sid=99#%40v2_mod_shop%F0%9F%9A%80`**
+vless://1dbfb57c-164e-47c5-9355-8e0c429e7b99@45.82.245.173:80?path=%2Fvless%2F&security=none&encryption=none&host=---%40External_Net---%40External_Net---%40External_Net---%40External_Net---%40External_Net&type=ws#%F0%9F%87%A7%F0%9F%87%B7%20Brazil
+vless://48198295-b7ba-4b5c-8d85-085d55a6c869@185.133.35.115:443?security=tls&sni=ap.ylks.xyz&type=ws&host=ap.ylks.xyz&path=%2Fblue# VL-WS-TLS  BR-185.133.35.115:443
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@185.133.35.144:443?security=tls&sni=lx.ylks01.eu.org&type=ws&host=lx.ylks01.eu.org&path=%2Fblue# VL-WS-TLS  BR-185.133.35.144:443
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@144.22.252.124:443?security=tls&sni=cp.ylks.xyz&type=ws&host=cp.ylks.xyz&path=%2Fblue# VL-WS-TLS  BR-144.22.252.124:443
+vless://04303375-20cb-4e2f-b19d-1ed05b786269@199.232.113.226:443?security=tls&sni=video.nordkapp-boats.no&type=ws&host=matinof.com&path=ws%2FVMESSKHODAM%2CVMESSKHODAM%2CVMESSKHODAM%2CVMESSKHODAM%2CVMESSKHODAM%2CVMESSKHODAM%3Fed%3D1024&fp=chrome&alpn=h3%2Ch2%2Chttp%2F1.1&allowInsecure=1# VL-WS-TLS  BR-199.232.113.226:443
+vless://cc3a15eb-0a63-486c-8e12-c7be717ebcd4@132.226.163.224:2053?security=tls&sni=bPB005.PAGeS.Dev&type=ws&host=bPB005.PAGeS.Dev&path=%2Ftsk179ptmakaggvh%2Fmtuyljy3ljiznc40oq# VL-WS-TLS  BR-132.226.163.224:2053
+vless://d71ac071-5dc5-4930-824a-cacd3e85dad2@forest-moon-pulse-bright-quick.dlcnamatike7.com:19771?type=ws&encryption=none&path=%2F&host=&security=none#4FreeIran-9468
+vless://e1628f52-dcbd-417c-90cc-e9266b28ea38@pq-brazil1.09vpn.com:8443?encryption=none&security=tls&sni=pq-brazil1.09vpn.com&fp=chrome&insecure=0&allowInsecure=0&type=ws&host=pq-brazil1.09vpn.com&path=%2Fvless%2F#qoli_1698
