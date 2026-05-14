@@ -1,0 +1,20 @@
+# 🇨🇳 China (CN) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 16
+
+vless://7890ce31-9a25-4fd4-90e7-80e5823ff510@wangcai2.000444.cn:8880?encryption=none&security=none&type=ws&host=frejd.11258.workers.dev&path=%2Ftelegram%F0%9F%87%A8%F0%9F%87%B3@wangcai2%2F%3Fed%3D2560#%5BOpenRay%5D%20Dynamic-1190
+vless://981fca81-5be1-41f8-ac9b-d138e8109943@43.169.19.179:443?allow_insecure=0&host=babayaga-6i7.pages.dev&path=%2F%3Fed%3D2560%26Telegram%F0%9F%87%A8%F0%9F%87%B3%2B%40WangCai2&security=tls&sni=babayaga-6i7.pages.dev&type=ws#%5BOpenRay%5D%20%F0%9F%87%A8%F0%9F%87%B3%20CN-1
+vless://07050e47-3484-4062-bd62-845968e062ad@137.175.93.121:19352?type=tcp&encryption=none&host=&path=&headerType=none&quicSecurity=none&serviceName=&security=reality&flow=&fp=chrome&insecure=1&sni=www.icloud.com&pbk=UtL7E0Gmxj3X5JdcPAutpTRKo7K2hugkR0vwk2XroUM&sid=#%5BOpenRay%5D%20%F0%9F%87%A8%F0%9F%87%B3%20CN-6
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@77.105.163.40:8880?host=vms.lifetime60.workers.dev&path=%2F%3Fed%3D2560%26https%3A%2F%2Ft.me%2Fyoutube%40ZYFXS%F0%9F%87%A8%F0%9F%87%B3&type=ws#%5BOpenRay%5D%20%F0%9F%87%A8%F0%9F%87%B3%20CN-7
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@103.184.44.62:2053?encryption=none&security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%f0%9f%87%a8%f0%9f%87%b3+CN+%e4%b8%ad%e5%9b%bd+36
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@103.232.214.11:8443?encryption=none&security=tls&sni=cfed.tgzdyz2.top&type=ws&host=cfed.tgzdyz2.top&path=tg%40zdyz2#%f0%9f%87%a8%f0%9f%87%b3+CN+%e4%b8%ad%e5%9b%bd+57
+vless://2cd6ed0f-636e-4e6c-9449-5a263d7a0fa5@43.198.53.11:443?encryption=none&security=tls&sni=cfed.tgzdyz2.top&type=ws&host=cfed.tgzdyz2.top&path=tg%40zdyz2#%f0%9f%87%a8%f0%9f%87%b3+CN+%e4%b8%ad%e5%9b%bd+34
+vless://f330576f-eda3-4fcf-9756-b453fff18b6f@wangcai150.000444.cn:443?&security=tls&sni=rac.679888.xyz&type=ws&headerType=none&host=rac.679888.xyz&path=%2Fhptjws#4FreeIran-9921
+vless://1a25f8ad-cad2-4e93-b5bf-34e42bcac02a@www.visa.cn:2053?encryption=none&security=tls&sni=sni.111000.dynv6.net&fp=chrome&insecure=0&allowInsecure=0&type=ws&host=sni.111000.dynv6.net&path=%2F%3Fed%3D2560#qoli_1881
+vless://6f117bb6-1a30-43cf-ac11-b5467ca680dd@cf.tencentapp.cn:443?allowInsecure=1&fp=random&host=subtale.trevely.de5.net&insecure=1&path=%2F%3Fed%3D2560&security=tls&sni=subtale.trevely.de5.net&type=ws#%E4%BA%8C%E7%88%B7%E7%BF%BB%E5%A2%99%E5%85%8D%E8%B4%B9%E8%8A%82%E7%82%B9%E5%AE%98%E7%BD%91%20love.zshabi.top
+vless://44580ef5-b588-4de8-9784-bb1de1573702@cf.tencentapp.cn:443?allowInsecure=1&fp=random&host=subtale.trevely.de5.net&insecure=1&path=%2F%3Fed%3D2560&security=tls&sni=subtale.trevely.de5.net&type=ws#%E4%BA%8C%E7%88%B7%E7%BF%BB%E5%A2%99%E5%85%8D%E8%B4%B9%E8%8A%82%E7%82%B9FREE_CF%2003%E1%B5%80%CA%B3%E1%B5%89%E1%B5%9B%E1%B5%89%CB%A1%CA%B8
+vless://14b02e2a-8930-4afb-8412-ea4a4954ca5b@cf.tencentapp.cn:443?encryption=none&amp;security=tls&amp;sni=zgtwylnhh.cc.cd&amp;fp=randomized&amp;allowInsecure=1&amp;type=ws&amp;host=zgtwylnhh.cc.cd&amp;path=/proxyip=122.10.114.184:8443#Â§©‰π¶13
+vless://546cfb84-120f-43db-89db-5cba033bf9dc@analytics-cn.elephant-tech.xyz.:8880?path=/@ZEDMODEON+TEL¬†+@ZEDMODEON+TEL¬†+@ZEDMODEON+TEL¬†+@ZEDMODEON+JOIN+@ZEDMODEON+TEL¬†+@ZEDMODEON+JOIN+@ZEDMODEON+TEL¬†+@ZEDMODEON+TEL¬†+@ZEDMODEON+JOIN+@ZEDMODEON+TEL¬†+@ZEDMODEON+@ZeV2ray&amp;security=none&amp;encryption=none&amp;host=xn---qhnayawi--d-vdk4borp32aj02aoha8dw0a0a1c46444eckia.xn--48jyb6eya.tech.&amp;type=ws#@Proxy_n1
+vless://59860b15-b2d9-47f9-9b92-81bd1639fcc5@visa.cn:443?path=/?ed=2560&amp;security=tls&amp;encryption=none&amp;host=5-55sfjslf.ifenxiang.cfd&amp;fp=random&amp;type=ws&amp;sni=5-55sfjslf.ifenxiang.cfd#@V2rayi_net
+vless://SVNTEAM@CN.GiSVN.iR:443/?type=tcp&amp;security=reality&amp;pbk=PX3Iw8tKNRnG6_MqONvC96D7G1RWe_VvBJ99UGN150k&amp;fp=chrome&amp;sni=www.latimes.com&amp;sid=&amp;spx=/SVN#@vpnstorefast
+vless://SVNTEAM@cn.gisvn.ir:443?type=tcp&security=reality&sni=www.latimes.com&fp=chrome&pbk=PX3Iw8tKNRnG6_MqONvC96D7G1RWe_VvBJ99UGN150k#XX   VLESS-TCP-RLT  None
