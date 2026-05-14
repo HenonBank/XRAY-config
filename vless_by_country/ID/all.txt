@@ -1,0 +1,17 @@
+# 🇮🇩 Indonesia (ID) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 13
+
+vless://6202b230-417c-4d8e-b624-0f71afa9c75d@45.196.29.30:8880?type=ws&security=none&encryption=none&host=vms.lifetime20.workers.dev#%5BOpenRay%5D%20%F0%9F%87%AE%F0%9F%87%A9%20ID-15
+vless://65e542e0-0690-4787-b7e3-a4706013097d@vps.jentago.web.id:80/?type=ws&encryption=none&flow=&host=vps.jentago.web.id&path=/vless#INT
+vless://ca73d911-29f4-42d8-ada5-81dee679e96a@vps.zakir.web.id:80/?type=ws&encryption=none&flow=&host=vps.zakir.web.id&path=vless#INT
+vless://29281351-acf2-4b08-9dcc-97de24aed5da@id.artunnel57.host:443?security=xtls&encryption=none&headerType=none&type=tcp&flow=xtls-rprx-direct&sni=id.artunnel57.host#Join+Telegram:@Farah_VPN
+vless://---WLFVPN---@WLF-V-P-N-ID.dnsfree.one:443?type=tcp&security=reality&headerType=none&fp=firefox&sni=www.speedtest.net&flow=xtls-rprx-vision&pbk=GAUjNf1wQnDm5ziCGqRmb3yVfU9bg_UPwZ2_QU4JWRU&sid=6bb85179e30d4fc2#Mahsa_Amini
+vless://aaaaaaa1-bbbb-4ccc-accc-eeeeeeeeeee1@web.xhamster.biz.id:443?path=%2FFree-CF-Proxy-AT29&security=tls&encryption=none&host=web.xhamster.biz.id&type=ws&sni=web.xhamster.biz.id# Server252| Sonzai X
+vless://81f1f510-3ca7-4734-8956-0f4fce670af5@id-1.vless.co:80?encryption=none&security=none&type=ws&host=www.wasa.com&path=%2Ffastssh%2Fxkxkxkxkj%2F63482bc65a424%2F#%40wearestand
+vless://35b56ca6-5c90-4fc6-b8be-3384a4156a90@bakrie.ac.id.servpn.my.id:443?encryption=none&security=tls&sni=bakrie.ac.id.servpn.my.id&type=ws&host=bakrie.ac.id.servpn.my.id&path=%2Fsg3#VL-0521-018
+vless://39ca66b9-a34c-4031-a6ce-8846f75d8cb9@app-stg.gopay.co.id.servpn.my.id:443?encryption=none&security=tls&sni=app-stg.gopay.co.id.servpn.my.id&type=ws&host=app-stg.gopay.co.id.servpn.my.id&path=%2Fsg10#VL-0521-015
+vless://376b9861-2fc6-4647-959c-18185cd9c95a@32--join.outline-vpn.cloud:443?path=/fflsws&amp;security=tls&amp;encryption=none&amp;host=lmn37.sbs&amp;type=ws&amp;sni=lmn37.sbs#OU+65+ID(@Outline_Vpn)
+vless://30f2d443-af46-4dd6-83c9-b5e17299ebd2@www.ums.id:443?path=/proxyip=zani.yaemiko.ggff.net/?JKVPN_TELEGRAM_JKVPN_JKVPN&amp;security=tls&amp;alpn=http/1.1&amp;encryption=none&amp;host=carlotta.shoorekeeper.cloudns.org&amp;fp=randomized&amp;type=ws&amp;sni=carlotta.shoorekeeper.cloudns.org#
+vless://6e34f2c5-6c71-4010-c292-10d05ef4a9a2@173.245.58.34:443?path=/?ed=2048&amp;security=tls&amp;encryption=none&amp;host=admin.quranmajid.eu.org&amp;type=ws&amp;sni=admin.quranmajid.eu.org#Channel+id:+@ShadowProxy66üá∫üá≤
+vless://9bc90ddf-b865-47cc-9f97-9d5ea3bca89f@104.21.78.131:443?path=/?ed=2048&amp;security=tls&amp;encryption=none&amp;host=vl31.rnd.biz.id&amp;type=ws&amp;sni=vl31.rnd.biz.id#Channel+id:+@ShadowProxy66üá∫üá≤
