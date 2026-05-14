@@ -1,0 +1,7 @@
+# 🇮🇱 Israel (IL) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 3
+
+vless://de44b044-8f90-4e18-b742-16591667ff96@20.217.216.51:2053?security=tls&sni=edgetunnel-free.pages.dev&type=ws&host=edgetunnel-free.pages.dev&path=%2F%3Fed%3D2048&fp=randomized# VL-WS-TLS  IL-20.217.216.51:2053
+vless://da3aa11b-37fc-4c0c-85e2-5e4ca9f4b129@national.vpn1.teamsell.org:39594?type=tcp&amp;security=none#üí´‚ùÑÔ∏èüöÄTest-il91dyyz
+vless://0e8a6896-ad90-4a3b-89a3-77d64aa409e2@ilta-wzxrxkdhbjpnprhkkpplsjwawhssvollvxzdhqshiqckwdgrdm.orbnet.xyz:443?type=tcp&security=reality#IL   VLESS-TCP-RLT - MICROSOFT-CORP-MSN-AS-BLOCK  20.217.82.69
