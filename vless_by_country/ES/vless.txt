@@ -1,0 +1,14 @@
+# 🇪🇸 Spain (ES) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 10
+
+vless://ecc97810-557a-44ef-9957-ba078d0ac414@45.12.150.145:15470?security=reality&sni=yahoo.com&fp=chrome&pbk=Io59wtB0RP01ty3SWv8Hn-z84vrckaEPVJi6SRBqFXY&sid=e08a28&type=tcp&packetEncoding=xudp&encryption=none#%5BOpenRay%5D%20%F0%9F%87%AA%F0%9F%87%B8%20ES-7
+vless://2aa2dba0-e0f7-4ab5-9c92-edadf9ce524c@141.227.128.192:1210?security=reality&sni=ubuntu.com&type=grpc&serviceName=%40%40jet_config-%40jet_config-%40jet_config&fp=chrome&pbk=YWfCdTnr4FAOMYTY2dLrMtQUokyxOGpPhYEEszPj20E&sid=7fe29733# VL-GRPC-RLT  ES-141.227.128.192:1210
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@176.97.72.18:443?security=tls&sni=ld.ylks.us.kg&type=ws&path=%2F%3Fed%3D2560# VL-WS-TLS  ES-176.97.72.18:443
+vless://48198295-b7ba-4b5c-8d85-085d55a6c869@34.175.202.195:443?security=tls&sni=aw.ylks.xyz&type=ws&host=aw.ylks.xyz&path=%2F%3Fed%3D2048# VL-WS-TLS  ES-34.175.202.195:443
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@185.18.250.185:2053?encryption=none&security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%f0%9f%87%aa%f0%9f%87%b8+ES+%e8%a5%bf%e7%8f%ad%e7%89%99+9
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@185.238.228.212:443?encryption=none&security=tls&type=ws&sni=juzibaipiao.5112233.xyz&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%F0%9F%87%AA%F0%9F%87%B8_ES_%E8%A5%BF%E7%8F%AD%E7%89%99_1
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@185.238.228.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%AA%F0%9F%87%B8%20ES-185.238.228.247%3A8880
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@185.251.81.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%AA%F0%9F%87%B8%20ES-185.251.81.247%3A8880
+vless://4d263c1a-fbb9-4946-a639-1de531120cde@185.18.250.67:8080?encryption=none&security=none&type=xhttp&host=amazon.joingulf.lol&path=/awduhiawad?ed=2560&mode=auto# ES | 185.18.250.67
+vless://65a1e22c-d37e-4b92-b6ca-1d09dcd1d441@spain.torprospeed.ir:587?type=tcp&security=reality&sni=excoino.com&fp=chrome&pbk=HnPEhCDTcZnDejsAiidoOSx2-h0EvJMILj4bv3X1mBc&sid=916e8258c4a01b02#ES   VLESS-TCP-RLT - Akamai Connected Cloud  172.233.116.229
