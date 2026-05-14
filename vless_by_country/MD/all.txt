@@ -1,0 +1,5 @@
+# 🇲🇩 Moldova (MD) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 1
+
+vless://d342d11e-d424-4583-b36e-524ab1f0afa4@95.164.22.239:2003?security=tls&sni=vless.ifx.us.kg&type=ws&host=vless.ifx.us.kg&path=%2F%3Fed%3D2560&fp=chrome# VL-WS-TLS  MD-95.164.22.239:2003
