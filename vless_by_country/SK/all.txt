@@ -1,0 +1,5 @@
+# 🇸🇰 Slovakia (SK) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 1
+
+vless://8099cb0f-d19d-4252-af27-1527c00b64c5@sk.abadanvpn.host:443?encryption=none&flow=xtls-rprx-direct&security=xtls&type=tcp&headerType=none#Join+Telegram:@Farah_VPN
