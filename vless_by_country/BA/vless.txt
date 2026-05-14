@@ -1,0 +1,7 @@
+# 🇧🇦 Bosnia (BA) - VLESS Only
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 3
+
+vless://75e1fde7-6bf6-48ef-ba43-400e960e185b@pq-BosniaandHerzegovina1.09vpn.com:80?path=/vless/&security=&encryption=none&type=ws#%5BOpenRay%5D%20%F0%9F%87%A7%F0%9F%87%A6%20BA-1
+vless://75e1fde7-6bf6-48ef-ba43-400e960e185b@45.15.178.124:80?security=none&encryption=none&type=ws&path=/vless/#%5BOpenRay%5D%20%F0%9F%87%A7%F0%9F%87%A6%20BA-2
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@77.74.228.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%A7%F0%9F%87%A6%20BA-77.74.228.247%3A8880
