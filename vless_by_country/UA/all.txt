@@ -1,0 +1,16 @@
+# 🇺🇦 Ukraine (UA) - VLESS Proxies
+# Updated: 2026-05-14 17:33:35 UTC
+# Total: 12
+
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@da.mfa.gov.ua:443?encryption=none&security=tls&sni=1-axj.pages.dev&insecure=0&allowInsecure=0&type=ws&host=1-axj.pages.dev&path=%2Fproxyip%3DProxyIP.DE.owg.dpdns.org#%5BOpenRay%5D%20Dynamic-17077
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@mfa.gov.ua:443?type=ws&security=tls&encryption=none&fp=chrome&sni=3-bio.pages.dev&host=3-bio.pages.dev#%5BOpenRay%5D%20Dynamic-17074
+vless://ce069292-c8bf-40dd-a6b1-87818a1e64e9@tajikistan.mfa.gov.ua:443?&security=tls&fp=chrome&sni=1-aym.pages.dev&type=ws&headerType=none&host=1-aym.pages.dev&path=%2F#%5BOpenRay%5D%20Dynamic-17343
+vless://90cd4a77-141a-43c9-991b-08263cfe9c10@gur.gov.ua:443?path=%2F%3Fed&security=tls&encryption=none&host=azadnet3-9do.pages.dev&type=ws&sni=azadnet3-9do.pages.dev# Server319| Sonzai X
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:2053?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_7
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:2087?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_102
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:8443?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_114
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:443?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_225
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:2083?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_232
+vless://a13df940-020c-465f-bc89-ee5279b5cd6a@www.gov.ua:2096?security=tls&type=ws&sni=jp033.ylks01.eu.org&path=/blue&encryption=none&headerType=none#%E7%BE%8E%E5%9B%BD_303
+vless://f775978b-6e22-41a8-ae5e-5f9779e6745f@45.80.111.198:443?encryption=none&security=tls&sni=juzibaipiao.5112233.xyz&type=ws&host=juzibaipiao.5112233.xyz&path=%2f%3fed%3d2048#%f0%9f%87%ba%f0%9f%87%a6+UA+%e4%b9%8c%e5%85%8b%e5%85%b0+75
+vless://d60fc3c5-9f07-4cdb-b81f-70af27936bdc@91.124.127.247:8880?encryption=none&security=none&sni=ex.sue.x10.mx&type=ws&host=ex.sue.x10.mx&path=%2FTelegram%F0%9F%87%A8%F0%9F%87%B3#%F0%9F%94%92%20VL-WS-NA%20%F0%9F%87%BA%F0%9F%87%A6%20UA-91.124.127.247%3A8880
